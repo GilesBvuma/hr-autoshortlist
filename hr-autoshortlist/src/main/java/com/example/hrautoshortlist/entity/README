@@ -1,0 +1,5 @@
+Because there being both candidates and users getting saved in this application both need their own tables
+so we make a Candidate (Entity)table and a User(Entity) both with their own data 
+A REST API is a specific type of API that uses HTTP requests (like GET, POST, PUT, DELETE) to perform operations on resources (like User, Product, Order), typically returning data in JSON or XML format.
+So, "creating an API in Spring Boot" means using the Spring Boot framework to quickly and efficiently build a set of endpoints(eg {"/api/candidates"}) that other applications can call over HTTP to get, create, update, or delete data
+The DispatcherServlet: This is the heart of Spring MVC. It receives all incoming requests and routes them to the correct controller method. You don't have to configure this yourself; Spring Boot does it automatically.
