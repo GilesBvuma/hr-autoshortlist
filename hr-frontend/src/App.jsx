@@ -1,62 +1,36 @@
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { useState } from "react";
 
-import Candidates from "./Components/candidates";
-import Login from "./Components/Login";
-import Register from "./Components/Register";
+import Navbar from "./components/Navbar";
 
+import LoginPage from "./pages/LoginPage";
+import RegisterPage from "./pages/RegisterPage";
+import CandidatesPage from "./pages/CandidatesPage";
 
+import { useAuthStore } from "./stores/useAuthStore";
 
 function App() {
-  // Track authentication state
-  const [isAuthenticated, setIsAuthenticated] = useState(
-    !!localStorage.getItem("token")
-  );
-
-
-  const logout = () => {
-    localStorage.removeItem("token");
-    setIsAuthenticated(false);
-    window.location.href = "/login";
-  };
+  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
 
   return (
     <BrowserRouter>
-      <div>
-        <h1>HR Auto Shortlist</h1>
+      <Navbar />
 
-        <button 
-          onClick={logout} 
-          className="bg-red-500 text-white px-3 py-2 rounded mb-3"
-        >
-          Logout
-        </button>
+      <Routes>
+        {/* Public */}
+        <Route path="/login" element={<LoginPage />} />
+        <Route path="/register" element={<RegisterPage />} />
 
-        <Routes>
+        {/* Protected */}
+        <Route
+          path="/candidates"
+          element={isAuthenticated ? <CandidatesPage /> : <Navigate to="/login" />}
+        />
 
-          {/* Public Routes */}
-          <Route path="/register" element={<Register />} />
-          <Route path="/login" element={<Login onLogin={() => setIsAuthenticated(true)} />} />
-
-
-          {/* Protected Route */}
-          <Route 
-            path="/candidates"
-            element={
-              isAuthenticated ? <Candidates /> : <Navigate to="/login" />
-            }
-          />
-
-          {/* Default Route */}
-          <Route path="*" element={<Navigate to="/login" />} />
-
-        </Routes>
-      </div>
+        {/* Default */}
+        <Route path="*" element={<Navigate to="/login" />} />
+      </Routes>
     </BrowserRouter>
   );
-  
-
 }
 
 export default App;
-
