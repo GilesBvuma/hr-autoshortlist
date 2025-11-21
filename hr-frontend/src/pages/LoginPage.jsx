@@ -1,9 +1,12 @@
 import { useState } from "react";
-import api from "../api/axios";
+import api from "../lib/axios";
 import { useNavigate } from "react-router-dom";
+import { useAuthStore } from "../stores/useAuthStore";
 
-function Login() {
+function LoginPage() {
   const navigate = useNavigate();
+  const login = useAuthStore((s) => s.login);
+
   const [username, setUsername] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
@@ -11,11 +14,10 @@ function Login() {
   const handleLogin = async () => {
     try {
       const res = await api.post("/auth/login", { username, password });
-      //Save token 
-      localStorage.setItem("token", res.data);
-      //Navigate to
+
+      login(res.data); // saves token + updates global state
+
       navigate("/candidates");
-    // eslint-disable-next-line no-unused-vars
     } catch (err) {
       setError("Invalid username or password");
     }
@@ -55,4 +57,4 @@ function Login() {
   );
 }
 
-export default Login;
+export default LoginPage;

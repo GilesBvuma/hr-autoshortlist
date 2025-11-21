@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
-import api from "../api";
+import api from "../lib/axios";
 
-function Candidates() {
+function CandidatesPage() {
   const [candidates, setCandidates] = useState([]);
   const [error, setError] = useState("");
 
@@ -36,5 +36,4 @@ function Candidates() {
   );
 }
 
-export default Candidates;
-
+export default CandidatesPage;
