@@ -5,8 +5,14 @@ import com.example.hrautoshortlist.entity.User;
 import com.example.hrautoshortlist.service.AuthService;
 import com.example.hrautoshortlist.security.JwtUtil;
 import com.example.hrautoshortlist.repository.UserRepository;
+import org.springframework.security.core.annotation.AuthenticationPrincipal;
+import com.example.hrautoshortlist.service.UserService;
+
+import java.util.HashMap;
+
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
+import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
 //@RestController all methods called under the class with @RestCntroller return data and (not view names[HTML])
@@ -21,7 +27,7 @@ public class AuthController {
     @Autowired
     private JwtUtil jwtUtil;
     @Autowired
-    private UserRepository userRepository;
+    private UserService userService;
 
     // POST /api/items - creates a new item
     @PostMapping("/register") // Handles POST requests to /api/register POST meaning show
@@ -51,6 +57,19 @@ public class AuthController {
     public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
         authService.logout(token);
         return ResponseEntity.ok("Logged out");
+    }
+
+    @GetMapping("/me")
+    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
+        User user = userService.findByEmail(userDetails.getUsername());
+
+        return ResponseEntity.ok(new HashMap<String, Object>() {
+            {
+                put("id", user.getId());
+                put("name", user.getUsername());
+                put("email", user.getEmail());
+            }
+        });
     }
 
 }

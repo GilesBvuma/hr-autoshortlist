@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import api from "../lib/axios";
+import AdminNavbar from "../components/AdminNavbar";
 
 function CandidatesPage() {
   const [candidates, setCandidates] = useState([]);
@@ -20,20 +21,25 @@ function CandidatesPage() {
   }, []);
 
   return (
-    <div className="p-6">
-      <h2 className="text-2xl font-bold mb-4">Candidates</h2>
+    <div>
+      <AdminNavbar /> {/* NEW NAVBAR */}
 
-      {error && <p className="text-red-500">{error}</p>}
+      <div className="p-6">
+        <h2 className="text-2xl font-bold mb-4">Candidates</h2>
 
-      <ul>
-        {candidates.map((c) => (
-          <li key={c.id} className="mb-2 p-2 border rounded">
-            <strong>{c.name}</strong> — {c.position}
-          </li>
-        ))}
-      </ul>
+        {error && <p className="text-red-500">{error}</p>}
+
+        <ul>
+          {candidates.map((c) => (
+            <li key={c.id} className="mb-2 p-2 border rounded">
+              <strong>{c.name}</strong> — {c.position}
+            </li>
+          ))}
+        </ul>
+      </div>
     </div>
   );
 }
 
 export default CandidatesPage;
+

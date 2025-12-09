@@ -17,7 +17,7 @@ function RegisterPage() {
 
       setTimeout(() => navigate("/login"), 1500);
     } catch (err) {
-      setMessage("Registration failed.");
+      setMessage("Registration failed.",err);
     }
   };
 
