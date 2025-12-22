@@ -5,27 +5,27 @@ public class ApplicationResponseDTO {
     private String fullname;
     private String email;
     private String phone;
-    private String skillsSummary;
-    private String cvDownloadUrl; // safe URL for frontend
-    private String letterDownloadUrl; // safe URL for frontend
+    private String skills;
+    private String cvDownloadUrl;
+    private String letterDownloadUrl;
     private Long jobId;
 
     public ApplicationResponseDTO() {
     }
 
     public ApplicationResponseDTO(Long id, String fullname, String email, String phone,
-            String skillsSummary, String cvDownloadUrl, String letterDownloadUrl, Long jobId) {
+            String skills, String cvDownloadUrl, String letterDownloadUrl, Long jobId) {
         this.id = id;
         this.fullname = fullname;
         this.email = email;
         this.phone = phone;
-        this.skillsSummary = skillsSummary;
+        this.skills = skills;
         this.cvDownloadUrl = cvDownloadUrl;
         this.letterDownloadUrl = letterDownloadUrl;
         this.jobId = jobId;
     }
 
-    // getters / setters
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -58,12 +58,12 @@ public class ApplicationResponseDTO {
         this.phone = phone;
     }
 
-    public String getSkillsSummary() {
-        return skillsSummary;
+    public String getSkills() {
+        return skills;
     }
 
-    public void setSkillsSummary(String skillsSummary) {
-        this.skillsSummary = skillsSummary;
+    public void setSkills(String skills) {
+        this.skills = skills;
     }
 
     public String getCvDownloadUrl() {

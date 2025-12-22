@@ -6,7 +6,8 @@ import org.springframework.stereotype.Controller;
 import org.springframework.ui.Model;
 import org.springframework.web.bind.annotation.GetMapping;
 
-@Controller // Marks this class asa web request handler meaning its meant to return view names(templats) like home.html and not JSON data(returns view names)
+@Controller // Marks this class asa web request handler meaning its meant to return view
+            // names(templats) like home.html and not JSON data(returns view names)
 public class HomeController {
 
     @Autowired
@@ -22,5 +23,10 @@ public class HomeController {
     public String candidates(Model model) { // Spring injects Model object to pass data to view
         model.addAttribute("candidates", candidateService.getAllCandidates()); // adds data to the Model
         return "candidates";
+    }
+
+    @GetMapping("/dashboard")
+    public String dashboard() {
+        return "dashboard";
     }
 }

@@ -1,52 +1,83 @@
 package com.example.hrautoshortlist.controller;
 
-import com.example.hrautoshortlist.entity.Applicant;
-import com.example.hrautoshortlist.service.ApplicantService;
+import com.example.hrautoshortlist.entity.CandidateUser;
 import com.example.hrautoshortlist.security.JwtUtil;
+import com.example.hrautoshortlist.service.CandidateUserService;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/*
-  Candidate auth endpoints:
-    POST /candidate/register   -> registers applicant (body: email, password, fullName, phone)
-    POST /candidate/login      -> logs in and returns JWT as plain string (or JSON)
-*/
-
 @RestController
-@RequestMapping("/candidate")
-@CrossOrigin(origins = "*")
+@RequestMapping("/auth")
+@CrossOrigin(origins = "http://localhost:5173") // Specific origin is better than "*"
 public class CandidateAuthController {
 
-    @Autowired
-    private ApplicantService applicantService;
+    private static final Logger logger = LoggerFactory.getLogger(CandidateAuthController.class);
 
     @Autowired
-    private JwtUtil jwtUtil; // reuse existing JwtUtil
+    private CandidateUserService candidateUserService;
 
-    @PostMapping("/register")
-    public ResponseEntity<?> register(@RequestBody Applicant body) {
+    @Autowired
+    private JwtUtil jwtUtil;
+
+    // REGISTER
+    @PostMapping("/CandidateRegister")
+    public ResponseEntity<?> register(@RequestBody CandidateUser body) {
         try {
-            Applicant saved = applicantService.register(body);
-            // Do not return password
-            saved.setPassword(null);
+            logger.info("Registration attempt for email: {}", body.getEmail());
+
+            // Validate input
+            if (body.getEmail() == null || body.getEmail().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Email is required");
+            }
+            if (body.getPassword() == null || body.getPassword().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Password is required");
+            }
+            if (body.getFullName() == null || body.getFullName().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Full name is required");
+            }
+            if (body.getPhone() == null || body.getPhone().trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Phone is required");
+            }
+
+            CandidateUser saved = candidateUserService.register(body);
+            saved.setPassword(null); // do not expose password
+
+            logger.info("Registration successful for email: {}", saved.getEmail());
             return ResponseEntity.ok(saved);
         } catch (IllegalArgumentException ex) {
+            logger.error("Registration failed: {}", ex.getMessage());
             return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("Unexpected error during registration", ex);
+            return ResponseEntity.status(500).body("Registration failed: " + ex.getMessage());
         }
     }
 
-    @PostMapping("/login")
+    // LOGIN
+    @PostMapping("/CandidateLogin")
     public ResponseEntity<?> login(@RequestBody LoginRequest body) {
-        boolean ok = applicantService.validateLogin(body.email, body.password);
-        if (!ok)
-            return ResponseEntity.status(401).body("Invalid credentials");
-        String token = jwtUtil.generateToken(body.email);
-        // return token in simple JSON object
-        return ResponseEntity.ok(new JwtResponse(token));
+        try {
+            logger.info("Login attempt for email: {}", body.email);
+
+            boolean ok = candidateUserService.validateLogin(body.email, body.password);
+            if (!ok) {
+                logger.warn("Invalid credentials for email: {}", body.email);
+                return ResponseEntity.status(401).body("Invalid credentials");
+            }
+
+            String token = jwtUtil.generateToken(body.email);
+            logger.info("Login successful for email: {}", body.email);
+            return ResponseEntity.ok(new JwtResponse(token));
+        } catch (Exception ex) {
+            logger.error("Login error", ex);
+            return ResponseEntity.status(500).body("Login failed: " + ex.getMessage());
+        }
     }
 
-    // small DTOs
+    // --- DTOs ---
     public static class LoginRequest {
         public String email;
         public String password;

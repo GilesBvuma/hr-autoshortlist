@@ -10,45 +10,64 @@ public class Application {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    private String skillsSummary;
-    private String cvFilename;
-    private String letterFilename;
-
-    // Applicant who applied
+    // Candidate who applied
     @ManyToOne
-    @JoinColumn(name = "applicant_id")
-    private Applicant applicant;
+    @JoinColumn(name = "candidate_id", nullable = false)
+    private CandidateUser candidateUser;
 
     // Job applied for
     @ManyToOne
-    @JoinColumn(name = "job_id")
+    @JoinColumn(name = "job_id", nullable = false)
     private Job job;
+
+    // Application details
+    @Column(length = 2000)
+    private String skills;
+
+    @Column(name = "cv_filename")
+    private String cvFilename;
+
+    @Column(name = "letter_filename")
+    private String letterFilename;
 
     public Application() {
     }
 
-    public Application(String skillsSummary,
-            String cvFilename,
-            String letterFilename,
-            Applicant applicant,
-            Job job) {
-        this.skillsSummary = skillsSummary;
+    public Application(CandidateUser candidateUser, Job job, String skills, String cvFilename, String letterFilename) {
+        this.candidateUser = candidateUser;
+        this.job = job;
+        this.skills = skills;
         this.cvFilename = cvFilename;
         this.letterFilename = letterFilename;
-        this.applicant = applicant;
-        this.job = job;
     }
 
+    // Getters and Setters
     public Long getId() {
         return id;
     }
 
-    public String getSkillsSummary() {
-        return skillsSummary;
+    public CandidateUser getCandidateUser() {
+        return candidateUser;
     }
 
-    public void setSkillsSummary(String skillsSummary) {
-        this.skillsSummary = skillsSummary;
+    public void setCandidateUser(CandidateUser candidateUser) {
+        this.candidateUser = candidateUser;
+    }
+
+    public Job getJob() {
+        return job;
+    }
+
+    public void setJob(Job job) {
+        this.job = job;
+    }
+
+    public String getSkills() {
+        return skills;
+    }
+
+    public void setSkills(String skills) {
+        this.skills = skills;
     }
 
     public String getCvFilename() {
@@ -67,19 +86,21 @@ public class Application {
         this.letterFilename = letterFilename;
     }
 
-    public Applicant getApplicant() {
-        return applicant;
+    // Convenience methods to get candidate details
+    public String getFullname() {
+        return candidateUser != null ? candidateUser.getFullName() : null;
     }
 
-    public void setApplicant(Applicant applicant) {
-        this.applicant = applicant;
+    public String getEmail() {
+        return candidateUser != null ? candidateUser.getEmail() : null;
     }
 
-    public Job getJob() {
-        return job;
+    public String getPhone() {
+        return candidateUser != null ? candidateUser.getPhone() : null;
     }
 
-    public void setJob(Job job) {
-        this.job = job;
+    // Alias for compatibility with shortlist service
+    public String getSkillsSummary() {
+        return skills;
     }
 }

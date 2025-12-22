@@ -4,7 +4,6 @@ package com.example.hrautoshortlist.controller;
 import com.example.hrautoshortlist.entity.User;
 import com.example.hrautoshortlist.service.AuthService;
 import com.example.hrautoshortlist.security.JwtUtil;
-import com.example.hrautoshortlist.repository.UserRepository;
 import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.example.hrautoshortlist.service.UserService;
 
