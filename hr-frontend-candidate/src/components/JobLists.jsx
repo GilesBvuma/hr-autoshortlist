@@ -29,40 +29,69 @@ export default function JobsList() {
   }, []);
 
   return (
-    <div>
-      <CandidateNavbar />
-      <div className="p-5">
-        <h2 className="text-3xl font-bold mb-4">Available Positions</h2>
-        
-        {loading && <p>Loading jobs...</p>}
-        
-        {error && <p className="text-red-500">{error}</p>}
-        
-        {!loading && !error && jobs.length === 0 && (
-          <p>No openings available at the moment.</p>
-        )}
-        
-        <ul className="space-y-4">
-          {jobs.map(job => (
-            <li key={job.id} className="border p-4 rounded shadow">
-              <h3 className="text-xl font-bold">{job.title}</h3>
+  <>
+  <div className="min-h-screen bg-gradient-to-b from-white via-blue-100 to-blue-500">
+    <CandidateNavbar />
+
+    <div className="px-6 pt-16 pb-10 max-w-6xl mx-auto">
+      <h2 className="text-3xl font-semibold text-gray-800 mb-8">
+        Available Positions
+      </h2>
+
+      {loading && <p className="text-gray-600">Loading jobs...</p>}
+
+      {error && <p className="text-red-500">{error}</p>}
+
+      {!loading && !error && jobs.length === 0 && (
+        <p className="text-gray-600">
+          No openings available at the moment.
+        </p>
+      )}
+
+      <ul className="space-y-8">
+        {jobs.map((job) => (
+          <li
+            key={job.id}
+            className="bg-white rounded-3xl shadow-lg px-8 py-6 flex flex-col md:flex-row md:items-center md:justify-between"
+          >
+            {/* Job Info */}
+            <div>
+              <h3 className="text-xl font-semibold text-gray-800 mb-1">
+                {job.title}
+              </h3>
+
               {job.department && (
-                <p className="text-sm text-gray-600">Department: {job.department}</p>
+                <p className="text-sm text-gray-600">
+                  Department: {job.department}
+                </p>
               )}
+
               {job.yearsExperiance && (
-                <p className="text-sm text-gray-600">Experience: {job.yearsExperiance} years</p>
+                <p className="text-sm text-gray-600">
+                  Experience: {job.yearsExperiance} years
+                </p>
               )}
-              <p className="mt-2">{job.shortDescription}</p>
-              <Link 
-                to={`/jobs/${job.id}`} 
-                className="mt-3 inline-block bg-blue-500 text-white px-4 py-2 rounded hover:bg-blue-600"
+
+              <p className="mt-3 text-gray-700">
+                {job.shortDescription}
+              </p>
+            </div>
+
+            {/* Action */}
+            <div className="mt-4 md:mt-0">
+              <Link
+                to={`/jobs/${job.id}`}
+                className="inline-block bg-blue-600 text-white px-6 py-2 rounded-xl hover:bg-blue-700 transition"
               >
                 View Details
               </Link>
-            </li>
-          ))}
-        </ul>
-      </div>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
-  );
+  </div>
+  </>
+);
+
 }

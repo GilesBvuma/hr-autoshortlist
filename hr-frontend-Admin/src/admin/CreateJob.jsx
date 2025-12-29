@@ -4,91 +4,166 @@ import AdminNavbar from "../components/AdminNavbar";
 
 export default function CreateJob() {
   const [title, setTitle] = useState("");
-  const [department , setDepartment] = useState("");
-  const [yearsExperiance , setYearsExperiance] = useState("");
+  const [department, setDepartment] = useState("");
+  const [yearsExperiance, setYearsExperiance] = useState("");
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState("");
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState("");
 
   const submitHandler = async (e) => {
     e.preventDefault();
+    setLoading(true);
+    setError("");
 
     const payload = {
       title,
       department,
-      yearsExperiance :Number(yearsExperiance),
+      yearsExperiance: Number(yearsExperiance),
       shortDescription,
       description,
       skills: skills.split(",").map((s) => s.trim()),
     };
-    // CHANGED: Fixed API path - added leading "/" for proper URL resolution
+
+    console.log("📤 Sending job creation request:", payload);
+
     try {
-      await adminApi.post("/jobs/create", payload); // matches backend endpoint
-      alert("Job created successfully");
-      // optionally redirect to job list:
-      window.location.href = "/admin/jobs";
+      // FIXED: Changed from /jobs/create to /api/jobs/create
+      const response = await adminApi.post("/api/jobs/create", payload);
+      console.log("✅ Job created successfully:", response.data);
+      
+      alert("Job created successfully!");
+      
+      // Clear form
+      setTitle("");
+      setDepartment("");
+      setYearsExperiance("");
+      setShortDescription("");
+      setDescription("");
+      setSkills("");
+      
+      // Redirect to jobs list
+      setTimeout(() => {
+        window.location.href = "/admin/jobs";
+      }, 1000);
     } catch (err) {
-      console.error("Create job failed", err);
-      alert("Failed to create job");
+      console.error("❌ Create job failed:", err);
+      console.error("Error response:", err.response?.data);
+      
+      const errorMessage = err.response?.data || err.message || "Failed to create job";
+      setError(errorMessage);
+      alert("Failed to create job: " + errorMessage);
+    } finally {
+      setLoading(false);
     }
-
   };
-  return (
-    <div className="min-h-screen bg-gray-100">
-      {/* NAVBAR */}
-      <AdminNavbar />
 
-      <div className="p-6 max-w-2xl mx-auto bg-white border rounded shadow">
-        <h2 className="text-2xl font-bold mb-4">Create New Job</h2>
+  return (
+  <div className="min-h-screen bg-gradient-to-b from-white via-blue-100 to-blue-500">
+    <AdminNavbar />
+
+    {/* Center wrapper */}
+    <div className="flex justify-center px-4 pt-20 pb-10">
+      <div className="w-full max-w-2xl bg-white rounded-3xl shadow-xl border border-gray-200 p-8">
+        
+        <h2 className="text-xl font-semibold mb-6 text-gray-800">
+          Create New Job
+        </h2>
+
+        {error && (
+          <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-4">
+            {error}
+          </div>
+        )}
 
         <form onSubmit={submitHandler} className="space-y-4">
-          <input
-            className="border p-2 w-full"
-            placeholder="Job Title"
-            onChange={(e) => setTitle(e.target.value)}
-          />
-          <input
-            className="border p-2 w-full"
-            placeholder="Department"
-            onChange={(e) => setDepartment(e.target.value)}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-1">Job Title *</label>
+            <input
+              className="w-full rounded-lg bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. Senior Software Engineer"
+              value={title}
+              onChange={(e) => setTitle(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            className="border p-2 w-full"
-            placeholder = "Years Experience"
-            type="number"
-            onChange={(e) => setYearsExperiance(e.target.value)}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-1">Department *</label>
+            <input
+              className="w-full rounded-lg bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. Engineering"
+              value={department}
+              onChange={(e) => setDepartment(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            className="border p-2 w-full"
-            placeholder="Short Description"
-            onChange={(e) => setShortDescription(e.target.value)}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Years Experience Required *
+            </label>
+            <input
+              type="number"
+              className="w-full rounded-lg bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. 3"
+              value={yearsExperiance}
+              onChange={(e) => setYearsExperiance(e.target.value)}
+              required
+            />
+          </div>
 
-          <textarea
-            className="border p-2 w-full"
-            placeholder="Full Job Description"
-            rows="5"
-            onChange={(e) => setDescription(e.target.value)}
-          ></textarea>
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Short Description *
+            </label>
+            <input
+              className="w-full rounded-lg bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Brief one-line description"
+              value={shortDescription}
+              onChange={(e) => setShortDescription(e.target.value)}
+              required
+            />
+          </div>
 
-          <input
-            className="border p-2 w-full"
-            placeholder="Required Skills (comma separated)"
-            onChange={(e) => setSkills(e.target.value)}
-          />
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Full Job Description *
+            </label>
+            <textarea
+              rows="5"
+              className="w-full rounded-xl bg-gray-100 px-4 py-3 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="Detailed job description, responsibilities, requirements..."
+              value={description}
+              onChange={(e) => setDescription(e.target.value)}
+              required
+            />
+          </div>
+
+          <div>
+            <label className="block text-sm font-medium mb-1">
+              Required Skills (comma separated) *
+            </label>
+            <input
+              className="w-full rounded-lg bg-gray-100 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+              placeholder="e.g. Java, Spring Boot, React, PostgreSQL"
+              value={skills}
+              onChange={(e) => setSkills(e.target.value)}
+              required
+            />
+          </div>
 
           <button
             type="submit"
-            className="bg-blue-600 text-white px-4 py-2 rounded"
+            disabled={loading}
+            className="mt-4 w-full bg-blue-600 text-white py-2.5 rounded-xl hover:bg-blue-700 transition disabled:bg-gray-400"
           >
-            Create Job
+            {loading ? "Creating Job..." : "Create Job"}
           </button>
         </form>
       </div>
     </div>
-  );
+  </div>
+);
 }
-
-

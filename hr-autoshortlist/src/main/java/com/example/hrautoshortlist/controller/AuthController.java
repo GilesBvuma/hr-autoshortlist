@@ -1,76 +1,117 @@
-//AUTHENTICATION LAYER
 package com.example.hrautoshortlist.controller;
 
 import com.example.hrautoshortlist.entity.User;
-import com.example.hrautoshortlist.service.AuthService;
 import com.example.hrautoshortlist.security.JwtUtil;
-import org.springframework.security.core.annotation.AuthenticationPrincipal;
 import com.example.hrautoshortlist.service.UserService;
-
-import java.util.HashMap;
-
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.bind.annotation.*;
 
-//@RestController all methods called under the class with @RestCntroller return data and (not view names[HTML])
-//View names are strings called by controller methods that return template pages eg return "home"
-@RestController // combines @Controller + @ResponseBody (returns data , not views)
-@RequestMapping("/api/auth") // All methods in this controller start with /api
-@CrossOrigin(origins = "*")
+@RestController
+@RequestMapping("/auth")
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" })
 public class AuthController {
 
-    @Autowired
-    private AuthService authService;
-    @Autowired
-    private JwtUtil jwtUtil;
+    private static final Logger logger = LoggerFactory.getLogger(AuthController.class);
+
     @Autowired
     private UserService userService;
 
-    // POST /api/items - creates a new item
-    @PostMapping("/register") // Handles POST requests to /api/register POST meaning show
-    public User register(@RequestBody User user) { // @RequestBody converts JSON request body to User objet
-                                                   // automatically meaning each person(User) saved becomes an Object
-                                                   // .Example JSON: {"name": "John", "email": "john@example.com"} .
-                                                   // John becomes an object in the java system
-        return authService.register(user); // Return saved user (converted back to JSON) because all methods under a
-                                           // class with @RESTController are supposed to return data (JSON) and not
-                                           // views .
-    }
+    @Autowired
+    private JwtUtil jwtUtil;
 
-    @PostMapping("/login")
-    public String login(@RequestBody User user) { // @RequestBody annotation takes the JSON data sent in a web request
-                                                  // and changes it into java object that your program can work with .
-                                                  // makes it easier to hande data you recieve from clients such as name
-                                                  // and password.
-        // everythig under @RequestBody converts JSON request body to java object
-        boolean ok = authService.login(user.getUsername(), user.getPassword());
-        if (!ok)
-            return "Invalid username or password";
-        return jwtUtil.generateToken(user.getUsername()); // returns value converted to JSONS
-    }
+    // REGISTER
+    @PostMapping("/register")
+    public ResponseEntity<?> register(@RequestBody RegisterRequest body) {
+        try {
+            logger.info("=== REGISTER REQUEST ===");
+            logger.info("Username: {}", body.username);
+            logger.info("Email: {}", body.email);
+            logger.info("Password length: {}", body.password != null ? body.password.length() : 0);
 
-    // adding the endpoint so the frontend can call /logout
-    @PostMapping("/logout") // this is us exposing our REST API endpoints /logout is the endpoint
-    public ResponseEntity<?> logout(@RequestHeader("Authorization") String token) {
-        authService.logout(token);
-        return ResponseEntity.ok("Logged out");
-    }
-
-    @GetMapping("/me")
-    public ResponseEntity<?> getCurrentUser(@AuthenticationPrincipal UserDetails userDetails) {
-        User user = userService.findByEmail(userDetails.getUsername());
-
-        return ResponseEntity.ok(new HashMap<String, Object>() {
-            {
-                put("id", user.getId());
-                put("name", user.getUsername());
-                put("email", user.getEmail());
+            // Validation
+            if (body.username == null || body.username.trim().isEmpty()) {
+                logger.error("Username is empty");
+                return ResponseEntity.badRequest().body("Username is required");
             }
-        });
+            if (body.email == null || body.email.trim().isEmpty()) {
+                logger.error("Email is empty");
+                return ResponseEntity.badRequest().body("Email is required");
+            }
+            if (body.password == null || body.password.length() < 8) {
+                logger.error("Password too short");
+                return ResponseEntity.badRequest().body("Password must be at least 8 characters");
+            }
+
+            User user = new User(body.username, body.email, body.password);
+            User saved = userService.register(user);
+            saved.setPassword(null); // Don't expose password
+
+            logger.info("✓ Registration successful for user: {}", saved.getUsername());
+            return ResponseEntity.ok(saved);
+
+        } catch (IllegalArgumentException ex) {
+            logger.error("✗ Registration failed: {}", ex.getMessage());
+            return ResponseEntity.badRequest().body(ex.getMessage());
+        } catch (Exception ex) {
+            logger.error("✗ Unexpected error during registration", ex);
+            return ResponseEntity.status(500).body("Registration failed: " + ex.getMessage());
+        }
     }
 
+    // LOGIN
+    @PostMapping("/login")
+    public ResponseEntity<?> login(@RequestBody LoginRequest body) {
+        try {
+            logger.info("=== LOGIN REQUEST ===");
+            logger.info("Username: {}", body.username);
+            logger.info("Password provided: {}", body.password != null && !body.password.isEmpty());
+
+            if (body.username == null || body.username.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username is required");
+            }
+            if (body.password == null || body.password.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Password is required");
+            }
+
+            boolean ok = userService.validateLogin(body.username, body.password);
+
+            if (!ok) {
+                logger.warn("✗ Invalid credentials for username: {}", body.username);
+                return ResponseEntity.status(401).body("Invalid username or password");
+            }
+
+            String token = jwtUtil.generateToken(body.username);
+            logger.info("✓ Login successful for user: {}", body.username);
+            return ResponseEntity.ok(new JwtResponse(token));
+
+        } catch (Exception ex) {
+            logger.error("✗ Login error", ex);
+            return ResponseEntity.status(500).body("Login failed: " + ex.getMessage());
+        }
+    }
+
+    // --- DTOs ---
+    public static class RegisterRequest {
+        public String username;
+        public String email;
+        public String password;
+    }
+
+    public static class LoginRequest {
+        public String username;
+        public String password;
+    }
+
+    public static class JwtResponse {
+        public final String token;
+
+        public JwtResponse(String token) {
+            this.token = token;
+        }
+    }
 }
 /*
  * AuthController

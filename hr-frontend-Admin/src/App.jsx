@@ -13,6 +13,7 @@ import JobList from "./pages/JobList";
 import ApplicantsByJob from "./pages/ApplicantsByJob";
 
 import { useAuthStore } from "./stores/useAuthStore";
+import AllApplicants from "./pages/AllApplicants";
 
 function App() {
   const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
@@ -60,6 +61,10 @@ function App() {
 
         {/* DEFAULT */}
         <Route path="*" element={<Navigate to="/login" />} />
+        <Route
+        path="/admin/applicants"
+        element={isAuthenticated ? <AllApplicants /> : <Navigate to="/login" />}
+        />
       </Routes>
     </BrowserRouter>
   );

@@ -3,59 +3,120 @@ import adminApi from "../api/adminApi";
 import AdminNavbar from "../components/AdminNavbar";
 import { Link } from "react-router-dom";
 
-export default function AdminJobsList() {
+function AdminJobsList() {
   const [jobs, setJobs] = useState([]);
-
-  // CHANGED: Fixed API path - removed duplicate "/api" since baseURL already has it
-  const loadJobs = async () => {
-    try {
-      const res = await adminApi.get("/jobs");// removed the ("/api/job")
-      setJobs(res.data);
-    } catch (err) {
-      console.error("Error loading jobs", err);
-      setJobs([]);
-    }
-  };
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState("");
 
   useEffect(() => {
-    const fetchData = async () =>{
-        await loadJobs();
+    const loadJobs = async () => {
+      try {
+        setLoading(true);
+        console.log("📥 Fetching jobs from /api/jobs");
+        
+        const res = await adminApi.get("/api/jobs");
+        console.log("✅ Jobs fetched:", res.data);
+        
+        setJobs(res.data);
+        setError("");
+      } catch (err) {
+        console.error("❌ Failed to load jobs:", err);
+        setError("Failed to load jobs");
+      } finally {
+        setLoading(false);
+      }
     };
 
-    fetchData();
-    
+    loadJobs();
   }, []);
 
-  // CHANGED: Fixed API path - removed duplicate "/api"
   const deleteJob = async (id) => {
-    if (!confirm("Are you sure you want to delete this job?")) return;
+    if (!window.confirm("Delete this job?")) return;
 
     try {
-      await adminApi.delete(`/jobs/${id}`);
-      loadJobs(); // refresh list
+      await adminApi.delete(`/api/jobs/${id}`);
+      setJobs(jobs.filter((j) => j.id !== id));
+      alert("Job deleted successfully");
     } catch (err) {
-      console.error("Error deleting job", err);
+      console.error("Delete failed:", err);
+      alert("Failed to delete job");
     }
   };
-return (
-    <div>
-      <AdminNavbar />
-      <div className="p-6">
-        <h1 className="text-3xl font-bold mb-4">All Job Posts</h1>
-        {jobs.length === 0 && <p>No jobs created yet.</p>}
-        <ul className="space-y-4">
-          {jobs.map((job) => (
-            <li key={job.id} className="border p-4 rounded shadow">
-              <h2 className="text-xl font-bold">{job.title}</h2>
-              <p className="text-gray-700">{job.shortDescription}</p>
-              <div className="flex gap-4 mt-4">
-                <Link to={`/admin/jobs/${job.id}/applicants`} className="bg-blue-600 text-white px-3 py-2 rounded">View Applicants</Link>
-                <button onClick={() => deleteJob(job.id)} className="bg-red-600 text-white px-3 py-2 rounded">Delete Job</button>
-              </div>
-            </li>
-            ))}
-        </ul>
+
+  return (
+  <div className="min-h-screen bg-gradient-to-b from-white via-blue-100 to-blue-500">
+    <AdminNavbar />
+
+    <div className="px-6 pt-16 pb-10 max-w-6xl mx-auto">
+      {/* Header */}
+      <div className="flex justify-between items-center mb-8">
+        <h2 className="text-2xl font-semibold text-gray-800">
+          Manage Jobs
+        </h2>
+
+        <Link
+          to="/admin/jobs/create"
+          className="bg-green-500 text-white px-6 py-2 rounded-xl shadow hover:bg-green-600 transition"
+        >
+          Create New Job
+        </Link>
       </div>
+
+      {loading && <p className="text-gray-600">Loading jobs...</p>}
+      {error && <p className="text-red-500">{error}</p>}
+
+      {!loading && jobs.length === 0 && (
+        <p className="text-gray-500">
+          No jobs created yet. Create your first job!
+        </p>
+      )}
+
+      {/* Job cards */}
+      <ul className="space-y-8">
+        {jobs.map((job) => (
+          <li
+            key={job.id}
+            className="bg-white rounded-3xl shadow-lg px-8 py-6 flex justify-between items-center"
+          >
+            {/* Left info */}
+            <div>
+              <h3 className="text-lg font-semibold text-gray-800">
+                {job.title}
+              </h3>
+
+              <p className="text-sm text-gray-600 mt-1">
+                Experience : {job.yearsExperiance}
+              </p>
+
+              <p className="text-sm text-gray-600 mt-1">
+                Short Description : {job.shortDescription}
+              </p>
+            </div>
+
+            {/* Actions */}
+            <div className="flex gap-4">
+              <Link
+                to={`/admin/jobs/${job.id}/applicants`}
+                className="bg-blue-500 text-white px-5 py-2 rounded-xl hover:bg-blue-600 transition"
+              >
+                View Applicants
+              </Link>
+
+              <button
+                onClick={() => deleteJob(job.id)}
+                className="bg-red-500 text-white px-5 py-2 rounded-xl hover:bg-red-600 transition"
+              >
+                Delete
+              </button>
+            </div>
+          </li>
+        ))}
+      </ul>
     </div>
-  );
+  </div>
+);
+
 }
+
+export default AdminJobsList;
+

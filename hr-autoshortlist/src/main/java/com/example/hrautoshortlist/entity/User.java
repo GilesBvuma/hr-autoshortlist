@@ -1,4 +1,3 @@
-//DATA LAYER
 package com.example.hrautoshortlist.entity;
 
 import jakarta.persistence.*;
@@ -11,43 +10,39 @@ public class User {
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private Long id;
 
-    @Column(unique = true)
+    @Column(unique = true, nullable = false)
     private String username;
 
+    @Column(unique = true, nullable = false)
+    private String email;
+
+    @Column(nullable = false)
     private String password;
 
     public User() {
     }
 
-    @Column(unique = true)
-    private String email;
-
-    public User(String username, String password, String email) {
+    public User(String username, String email, String password) {
         this.username = username;
-        this.password = password;
         this.email = email;
+        this.password = password;
     }
 
-    // Getters & Setters
-    public Long getId() { // its getId only because we cant set our own Id it is generated in line 11
-                          // @GeneratedValue
+    // Getters and Setters
+    public Long getId() {
         return id;
     }
 
-    public String getUsername() { // get the username which we wouldve set
+    public void setId(Long id) {
+        this.id = id;
+    }
+
+    public String getUsername() {
         return username;
     }
 
-    public void setUsername(String username) { // set the user name you want
+    public void setUsername(String username) {
         this.username = username;
-    }
-
-    public String getPassword() { // get the password we want
-        return password;
-    }
-
-    public void setPassword(String password) { // set the password you want
-        this.password = password;
     }
 
     public String getEmail() {
@@ -58,7 +53,15 @@ public class User {
         this.email = email;
     }
 
+    public String getPassword() {
+        return password;
+    }
+
+    public void setPassword(String password) {
+        this.password = password;
+    }
 }
+
 /*
  * Represents a user record in the database
  * Contains username + hashed password + optional roles
