@@ -42,7 +42,12 @@ public class ApplicationController {
             @RequestParam(required = false) MultipartFile cv,
             @RequestParam(required = false) MultipartFile letter) {
         try {
-            logger.info("Received application - Job: {}, Candidate: {}", jobId, candidateUserId);
+            logger.info("=== APPLICATION SUBMISSION ===");
+            logger.info("Job ID: {}", jobId);
+            logger.info("Candidate User ID: {}", candidateUserId);
+            logger.info("Skills: {}", skills);
+            logger.info("CV: {}", cv != null ? cv.getOriginalFilename() : "None");
+            logger.info("Letter: {}", letter != null ? letter.getOriginalFilename() : "None");
 
             Application application = applicationService.submitApplication(
                     jobId,
@@ -50,6 +55,8 @@ public class ApplicationController {
                     skills,
                     cv,
                     letter);
+
+            logger.info("✓ Application saved with ID: {}", application.getId());
 
             // Return DTO instead of full entity
             ApplicationResponseDTO response = new ApplicationResponseDTO(
@@ -65,15 +72,15 @@ public class ApplicationController {
             return ResponseEntity.ok(response);
 
         } catch (IllegalStateException dup) {
-            logger.warn("Duplicate application: {}", dup.getMessage());
+            logger.warn("✗ Duplicate application: {}", dup.getMessage());
             return ResponseEntity.status(409).body(dup.getMessage());
 
         } catch (IllegalArgumentException notFound) {
-            logger.error("Not found: {}", notFound.getMessage());
+            logger.error("✗ Not found: {}", notFound.getMessage());
             return ResponseEntity.status(404).body(notFound.getMessage());
 
         } catch (Exception ex) {
-            logger.error("Error submitting application", ex);
+            logger.error("✗ Error submitting application", ex);
             return ResponseEntity.status(500).body("Error submitting application: " + ex.getMessage());
         }
     }
@@ -81,23 +88,55 @@ public class ApplicationController {
     // GET /api/applications/byJob/{jobId} - Admin views applications for a job
     @GetMapping("/applications/byJob/{jobId}")
     public ResponseEntity<List<ApplicationResponseDTO>> getByJob(@PathVariable Long jobId) {
-        logger.info("Fetching applications for job ID: {}", jobId);
+        logger.info("=== FETCHING APPLICATIONS FOR JOB ===");
+        logger.info("Job ID: {}", jobId);
 
-        List<Application> applications = applicationRepository.findByJobId(jobId);
+        List<Application> applications = applicationRepository.findByJob_Id(jobId); // FIXED: Use findByJob_Id
+
+        logger.info("Found {} applications", applications.size());
+
+        List<ApplicationResponseDTO> dtos = applications.stream()
+                .map(app -> {
+                    logger.info("Processing application ID: {}, Candidate: {}",
+                            app.getId(),
+                            app.getCandidateUser() != null ? app.getCandidateUser().getFullName() : "Unknown");
+
+                    return new ApplicationResponseDTO(
+                            app.getId(),
+                            app.getFullname(),
+                            app.getEmail(),
+                            app.getPhone(),
+                            app.getSkills(),
+                            app.getCvFilename() != null ? "/uploads/" + app.getCvFilename() : null,
+                            app.getLetterFilename() != null ? "/uploads/" + app.getLetterFilename() : null,
+                            jobId);
+                })
+                .collect(Collectors.toList());
+
+        logger.info("Returning {} DTOs for job {}", dtos.size(), jobId);
+        return ResponseEntity.ok(dtos);
+    }
+
+    // NEW: GET /api/applications/all - Get all applications across all jobs
+    @GetMapping("/applications/all")
+    public ResponseEntity<List<ApplicationResponseDTO>> getAllApplications() {
+        logger.info("Fetching all applications across all jobs");
+
+        List<Application> applications = applicationRepository.findAll();
 
         List<ApplicationResponseDTO> dtos = applications.stream()
                 .map(app -> new ApplicationResponseDTO(
                         app.getId(),
-                        app.getFullname(),
-                        app.getEmail(),
-                        app.getPhone(),
+                        app.getCandidateUser() != null ? app.getCandidateUser().getFullName() : "Unknown",
+                        app.getCandidateUser() != null ? app.getCandidateUser().getEmail() : "",
+                        app.getCandidateUser() != null ? app.getCandidateUser().getPhone() : "",
                         app.getSkills(),
                         app.getCvFilename() != null ? "/uploads/" + app.getCvFilename() : null,
                         app.getLetterFilename() != null ? "/uploads/" + app.getLetterFilename() : null,
-                        jobId))
+                        app.getJob() != null ? app.getJob().getId() : null))
                 .collect(Collectors.toList());
 
-        logger.info("Returning {} applications for job {}", dtos.size(), jobId);
+        logger.info("Returning {} total applications", dtos.size());
         return ResponseEntity.ok(dtos);
     }
 

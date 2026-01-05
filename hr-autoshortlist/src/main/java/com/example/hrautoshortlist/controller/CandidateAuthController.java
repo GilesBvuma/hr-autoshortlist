@@ -11,7 +11,7 @@ import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5173") // Specific origin is better than "*"
+@CrossOrigin(origins = "http://localhost:5174") // Specific origin is better than "*"
 public class CandidateAuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(CandidateAuthController.class);

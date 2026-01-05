@@ -1,8 +1,9 @@
 package com.example.hrautoshortlist.dto;
 
+import com.example.hrautoshortlist.enums.JobType;
+import java.time.LocalDateTime;
 import java.util.List;
 
-// lightweight DTO sent to frontend
 public class JobDTO {
     private Long id;
     private String title;
@@ -11,12 +12,24 @@ public class JobDTO {
     private String shortDescription;
     private String description;
     private List<String> skills;
+    private boolean active;
+
+    // NEW FIELDS
+    private JobType jobType;
+    private Integer numberOfOpenings;
+    private LocalDateTime applicationDeadline;
+    private LocalDateTime createdAt;
+    private Long viewCount;
+    private Integer applicantCount;
 
     public JobDTO() {
     }
 
-    public JobDTO(Long id, String title, String department, Integer yearsExperiance, String shortDescription,
-            String description, List<String> skills) {
+    // Constructor with all fields
+    public JobDTO(Long id, String title, String department, Integer yearsExperiance,
+            String shortDescription, String description, List<String> skills,
+            boolean active, JobType jobType, Integer numberOfOpenings,
+            LocalDateTime applicationDeadline, LocalDateTime createdAt, Long viewCount) {
         this.id = id;
         this.title = title;
         this.department = department;
@@ -24,9 +37,22 @@ public class JobDTO {
         this.shortDescription = shortDescription;
         this.description = description;
         this.skills = skills;
+        this.active = active;
+        this.jobType = jobType;
+        this.numberOfOpenings = numberOfOpenings;
+        this.applicationDeadline = applicationDeadline;
+        this.createdAt = createdAt;
+        this.viewCount = viewCount;
     }
 
-    // getters / setters
+    // Old constructor for backward compatibility
+    public JobDTO(Long id, String title, String department, Integer yearsExperiance,
+            String shortDescription, String description, List<String> skills) {
+        this(id, title, department, yearsExperiance, shortDescription, description, skills,
+                true, JobType.PERMANENT, 1, null, LocalDateTime.now(), 0L);
+    }
+
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -41,6 +67,22 @@ public class JobDTO {
 
     public void setTitle(String title) {
         this.title = title;
+    }
+
+    public String getDepartment() {
+        return department;
+    }
+
+    public void setDepartment(String department) {
+        this.department = department;
+    }
+
+    public Integer getYearsExperiance() {
+        return yearsExperiance;
+    }
+
+    public void setYearsExperiance(Integer yearsExperiance) {
+        this.yearsExperiance = yearsExperiance;
     }
 
     public String getShortDescription() {
@@ -67,20 +109,59 @@ public class JobDTO {
         this.skills = skills;
     }
 
-    public String getDepartment() {
-        return department;
+    public boolean isActive() {
+        return active;
     }
 
-    public void setDepartment(String department) {
-        this.department = department;
+    public void setActive(boolean active) {
+        this.active = active;
     }
 
-    public Integer getYearsExperiance() {
-        return yearsExperiance;
+    public JobType getJobType() {
+        return jobType;
     }
 
-    public void setYearsExperiance(Integer yearsExperiance) {
-        this.yearsExperiance = yearsExperiance;
+    public void setJobType(JobType jobType) {
+        this.jobType = jobType;
     }
 
+    public Integer getNumberOfOpenings() {
+        return numberOfOpenings;
+    }
+
+    public void setNumberOfOpenings(Integer numberOfOpenings) {
+        this.numberOfOpenings = numberOfOpenings;
+    }
+
+    public LocalDateTime getApplicationDeadline() {
+        return applicationDeadline;
+    }
+
+    public void setApplicationDeadline(LocalDateTime applicationDeadline) {
+        this.applicationDeadline = applicationDeadline;
+    }
+
+    public LocalDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(LocalDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public Long getViewCount() {
+        return viewCount;
+    }
+
+    public void setViewCount(Long viewCount) {
+        this.viewCount = viewCount;
+    }
+
+    public Integer getApplicantCount() {
+        return applicantCount;
+    }
+
+    public void setApplicantCount(Integer applicantCount) {
+        this.applicantCount = applicantCount;
+    }
 }

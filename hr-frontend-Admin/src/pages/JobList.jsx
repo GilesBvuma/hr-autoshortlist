@@ -3,7 +3,6 @@
 import { useEffect, useState } from "react";
 import adminApi from "../api/adminApi";
 import { Link } from "react-router-dom";
-import AdminNavbar from "../components/AdminNavbar";
 
 export default function JobList() {
   const [jobs, setJobs] = useState([]);
@@ -32,7 +31,6 @@ export default function JobList() {
 
   return (
     <div>
-      <AdminNavbar />
 
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">Available Jobs</h2>

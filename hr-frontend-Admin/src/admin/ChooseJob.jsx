@@ -3,6 +3,7 @@ import adminApi from "../api/adminApi";
 import AdminNavbar from "../components/AdminNavbar";
 import { Link } from "react-router-dom";
 
+
 function ChooseJob() {
   const [jobs, setJobs] = useState([]);
 
@@ -12,7 +13,7 @@ function ChooseJob() {
 
   return (
     <div>
-      <AdminNavbar />
+      
 
       <div className="p-6">
         <h1 className="text-2xl font-bold mb-4">Select Job to View Applicants</h1>

@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import adminApi from "../api/adminApi";
 import AdminNavbar from "../components/AdminNavbar";
+import AdminSidebar from "../components/AdminSidebar";
 
 function CandidatesPage() {
   const [candidates, setCandidates] = useState([]);
@@ -23,7 +24,7 @@ function CandidatesPage() {
 
   return (
     <div>
-      <AdminNavbar />
+      
 
       <div className="p-6">
         <h2 className="text-2xl font-bold mb-4">All Registered Candidates</h2>

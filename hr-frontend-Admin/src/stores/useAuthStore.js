@@ -1,16 +1,23 @@
 import { create } from "zustand";
 
-// CHANGED: Fixed token key to match adminApi interceptor - uses "adminToken" not "token"
 export const useAuthStore = create((set) => ({
-  isAuthenticated: !!localStorage.getItem("adminToken"),
+  user: null,
+  token: null,
+  isAuthenticated: false,
 
-  login: (token) => {
-    localStorage.setItem("adminToken", token);
-    set({ isAuthenticated: true });
-  },
+  login: (data) =>
+    set({
+      user: data.user ?? null,
+      token: data.token ?? null,
+      isAuthenticated: true,
+    }),
 
-  logout: () => {
-    localStorage.removeItem("adminToken");
-    set({ isAuthenticated: false });
-  },
+  logout: () =>
+    set({
+      user: null,
+      token: null,
+      isAuthenticated: false,
+    }),
 }));
+
+

@@ -12,61 +12,116 @@ export default function CandidateLogin() {
   const [error, setError] = useState("");
 
   const handleLogin = async () => {
+    setError("");
     try {
-      const res = await axios.post("/auth/CandidateLogin", { email, password });
+      const res = await axios.post("/auth/CandidateLogin", {
+        email,
+        password,
+      });
 
-      login(res.data); // saves token + updates global state
-
+      login(res.data); // DO NOT TOUCH
       navigate("/jobs");
     } catch (err) {
-      setError(err.response?.data?.message||"Invalid username or password");
+      setError(
+        err.response?.data?.message || "Invalid email or password"
+      );
     }
   };
 
   return (
-    <div className="flex justify-center items-center h-screen bg-gray-100">
-      <div className="p-6 bg-white shadow-lg rounded-lg w-96">
-        <h2 className="text-2xl font-bold text-center mb-4">Login</h2>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0b1220]">
+      {/* CARD */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 rounded-2xl overflow-hidden shadow-2xl bg-[#0f172a]">
 
-        {error && (
-          <p className="text-red-500 text-sm text-center mb-2">{error}</p>
-        )}
+        {/* LEFT: IMAGE / VISUAL */}
+        <div className="hidden md:block relative">
+          {/* DESKTOP ONLY TEXT */}
+          <div className="absolute top-10 left-10 z-10 text-left text-white">
+            <h2 className="text-3xl font-bold mb-2">
+              Welcome back<span className="text-sky-400">.</span>
+            </h2>
 
-        <input
-          className="border p-2 w-full mb-3 rounded"
-          type="text"
-          placeholder=""
-          onChange={(e) => setEmail(e.target.value)}
-        />
+            <p className="text-sm text-slate-300">
+              Don’t have an account?{" "}
+              <span
+                onClick={() => navigate("/auth/CandidateRegister")}
+                className="text-sky-400 hover:underline cursor-pointer"
+              >
+                Create one
+              </span>
+            </p>
+          </div>
 
-        <input
-          className="border p-2 w-full mb-3 rounded"
-          type="password"
-          placeholder="Password"
-          onChange={(e) => setPassword(e.target.value)}
-        />
+          <img
+            src="/Desktop - 7.jpg"
+            alt="Login visual"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+          />
 
-        <button
-          onClick={handleLogin}
-          className="bg-blue-600 text-white p-2 w-full rounded-lg hover:bg-blue-700"
-        >
-          Login
-        </button>
-        {/* REGISTER LINK */}
-        <p className="text-center text-sm mt-4">
-          Don’t have an account?{" "}
-          <span
-            onClick={() => navigate("/auth/CandidateRegister")}
-            className="text-blue-600 hover:underline cursor-pointer"
-          >
-            Register
-          </span>
-        </p>
-        
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/20" />
+        </div>
+
+        {/* RIGHT: FORM */}
+        <div className="p-10 text-white">
+          {/* LOGO */}
+          <div className="mb-10">
+            <img
+              src="/LOGO.png"
+              alt="Logo"
+              className="h-20 w-auto object-contain"
+            />
+          </div>
+
+          {/* MOBILE ONLY TEXT */}
+          <div className="block md:hidden mb-8">
+            <h2 className="text-3xl font-bold mb-2">
+              Welcome back<span className="text-sky-400">.</span>
+            </h2>
+
+            <p className="text-sm text-slate-400">
+              Don’t have an account?{" "}
+              <span
+                onClick={() => navigate("/auth/CandidateRegister")}
+                className="text-sky-400 hover:underline cursor-pointer"
+              >
+                Create one
+              </span>
+            </p>
+          </div>
+
+          {error && (
+            <p className="mb-4 text-sm text-red-400">{error}</p>
+          )}
+
+          <div className="space-y-4">
+            <input
+              type="email"
+              placeholder="Email address"
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-[#1e293b] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-[#1e293b] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-sky-400"
+            />
+
+            <button
+              onClick={handleLogin}
+              className="w-full mt-4 bg-sky-400 hover:bg-sky-500 text-slate-900 py-3 rounded-lg font-semibold transition"
+            >
+              Login
+            </button>
+          </div>
+        </div>
       </div>
     </div>
   );
 }
+
+
 
 
 

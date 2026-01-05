@@ -20,7 +20,7 @@ export default function AdminLogin() {
     try {
       const res = await adminApi.post("/auth/login", { username, password });
       login(res.data); // DO NOT CHANGE
-      navigate("/admin/dashboard");
+      navigate("/admin/dashboard",{replace: true});
     } catch (err) {
       setError(err.response?.data?.message || "Invalid username or password");
     } finally {

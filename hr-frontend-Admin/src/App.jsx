@@ -2,69 +2,70 @@ import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 
 import AdminLogin from "./pages/AdminLogin";
 import RegisterPage from "./pages/RegisterPage";
+
 import AdminDashboard from "./admin/AdminDashboard";
 import CreateJob from "./admin/CreateJob";
 import AdminJobsList from "./admin/AdminJobsList";
 import ChooseJob from "./admin/ChooseJob";
 import ApplicantsByJobAdmin from "./admin/ApplicantsByJobAdmin";
 import CandidatesPage from "./pages/CandidatesPage";
-// ADDED: Missing imports for JobList and ApplicantsByJob components
+import AllApplicants from "./pages/AllApplicants";
+
 import JobList from "./pages/JobList";
 import ApplicantsByJob from "./pages/ApplicantsByJob";
 
-import { useAuthStore } from "./stores/useAuthStore";
-import AllApplicants from "./pages/AllApplicants";
+import AdminLayout from "./layouts/AdminLayout";
+import ProtectedRoute from "./components/ProtectedRoute";
+import Reports from "./pages/Reports";
 
 function App() {
-  const isAuthenticated = useAuthStore((s) => s.isAuthenticated);
-
   return (
     <BrowserRouter>
-
       <Routes>
+
         {/* PUBLIC ROUTES */}
         <Route path="/login" element={<AdminLogin />} />
         <Route path="/register" element={<RegisterPage />} />
 
-        {/* PROTECTED ROUTES */}
+        {/* PROTECTED ADMIN ROUTES */}
         <Route
-          path="/admin/dashboard"
-          element={isAuthenticated ? <AdminDashboard /> : <Navigate to="/login" />}
-        />
+          path="/admin"
+          element={
+            <ProtectedRoute>
+              <AdminLayout />
+            </ProtectedRoute>
+          }
+        >
+          <Route path="dashboard" element={<AdminDashboard />} />
+          <Route path="jobs" element={<AdminJobsList />} />
+          <Route path="jobs/create" element={<CreateJob />} />
+          <Route path="jobs/choose" element={<ChooseJob />} />
+          <Route path="jobs/:jobId/applicants" element={<ApplicantsByJobAdmin />} />
+          <Route path="applicants" element={<AllApplicants />} />
+          <Route path="candidates" element={<CandidatesPage />} />
+          <Route path="reports" element = {<Reports/>}/>
+        </Route>
 
         <Route
-          path="/admin/jobs"
-          element={isAuthenticated ? <AdminJobsList /> : <Navigate to="/login" />}
+          path="/admin/reports"
+          element={
+          <ProtectedRoute>
+            <Reports />
+          </ProtectedRoute>
+          }
         />
 
-        <Route
-          path="/admin/jobs/create"
-          element={isAuthenticated ? <CreateJob /> : <Navigate to="/login" />}
-        />
-
-        <Route
-          path="/admin/jobs/choose"
-          element={isAuthenticated ? <ChooseJob /> : <Navigate to="/login" />}
-        />
-
-        <Route
-          path="/admin/jobs/:jobId/applicants"
-          element={isAuthenticated ? <ApplicantsByJobAdmin /> : <Navigate to="/login" />}
-        />
-
-        <Route
-          path="/admin/candidates"
-          element={isAuthenticated ? <CandidatesPage /> : <Navigate to="/login" />}
-        />
+        {/* LEGACY / PUBLIC */}
         <Route path="/jobs" element={<JobList />} />
-        <Route path="/admin/jobs/:jobId/applicants" element={<ApplicantsByJob />} />
-
-        {/* DEFAULT */}
-        <Route path="*" element={<Navigate to="/login" />} />
         <Route
-        path="/admin/applicants"
-        element={isAuthenticated ? <AllApplicants /> : <Navigate to="/login" />}
+          path="/admin/jobs/:jobId/applicants-old"
+          element={<ApplicantsByJob />}
         />
+
+        {/* FALLBACK */}
+        <Route path="*" element={<Navigate to="/login" replace />} />
+
+
       </Routes>
     </BrowserRouter>
   );

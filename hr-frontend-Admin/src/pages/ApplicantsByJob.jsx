@@ -38,7 +38,7 @@ export default function ApplicantsByJob() {
 
   return (
     <div className="p-5">
-      <AdminNavbar />
+      
 
       <h2 className="text-2xl font-bold mb-4">
         Candidates for Job #{jobId}

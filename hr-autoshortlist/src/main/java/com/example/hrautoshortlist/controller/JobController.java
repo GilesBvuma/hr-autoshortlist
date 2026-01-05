@@ -4,6 +4,7 @@ import com.example.hrautoshortlist.dto.JobDTO;
 import com.example.hrautoshortlist.dto.ApplicationResponseDTO;
 import com.example.hrautoshortlist.entity.Job;
 import com.example.hrautoshortlist.entity.Application;
+import com.example.hrautoshortlist.enums.JobType;
 import com.example.hrautoshortlist.service.JobService;
 import com.example.hrautoshortlist.service.ApplicationService;
 import org.slf4j.Logger;
@@ -11,14 +12,16 @@ import org.slf4j.LoggerFactory;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
+
+import java.time.LocalDateTime;
 import java.util.List;
-import java.util.stream.Collectors;
-import java.util.HashMap;
 import java.util.Map;
+import java.util.HashMap;
+import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api/jobs")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" }) // Both admin and candidate frontends
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" })
 public class JobController {
 
         private static final Logger logger = LoggerFactory.getLogger(JobController.class);
@@ -29,14 +32,13 @@ public class JobController {
         @Autowired
         private ApplicationService applicationService;
 
-        // GET /api/jobs - Get all jobs
+        // GET /api/jobs - Get all jobs with full details
         @GetMapping
         public ResponseEntity<List<JobDTO>> getAllJobs() {
                 logger.info("Fetching all jobs");
                 List<JobDTO> jobs = jobService.getAllJobs()
                                 .stream()
-                                .map(j -> new JobDTO(j.getId(), j.getTitle(), j.getDepartment(), j.getYearsExperiance(),
-                                                j.getShortDescription(), j.getDescription(), j.getSkills()))
+                                .map(jobService::convertToDTO)
                                 .collect(Collectors.toList());
                 logger.info("Returning {} jobs", jobs.size());
                 return ResponseEntity.ok(jobs);
@@ -51,16 +53,21 @@ public class JobController {
                 return ResponseEntity.ok(activeJobs);
         }
 
-        // GET /api/jobs/{id} - Get single job
+        // GET /api/jobs/{id} - Get single job (increments view count)
         @GetMapping("/{id}")
-        public ResponseEntity<JobDTO> getJob(@PathVariable Long id) {
+        public ResponseEntity<JobDTO> getJob(@PathVariable Long id,
+                        @RequestParam(required = false, defaultValue = "false") boolean incrementView) {
                 logger.info("Fetching job with ID: {}", id);
+
                 return jobService.getJobById(id)
-                                .map(j -> {
-                                        JobDTO dto = new JobDTO(j.getId(), j.getTitle(), j.getDepartment(),
-                                                        j.getYearsExperiance(), j.getShortDescription(),
-                                                        j.getDescription(),
-                                                        j.getSkills());
+                                .map(job -> {
+                                        // Increment view count if requested (e.g., when candidate views details)
+                                        if (incrementView) {
+                                                jobService.incrementViewCount(id);
+                                                logger.info("View count incremented for job: {}", id);
+                                        }
+
+                                        JobDTO dto = jobService.convertToDTO(job);
                                         return ResponseEntity.ok(dto);
                                 })
                                 .orElseGet(() -> {
@@ -71,16 +78,42 @@ public class JobController {
 
         // POST /api/jobs/create - Admin creates job
         @PostMapping("/create")
-        public ResponseEntity<JobDTO> createJob(@RequestBody JobDTO dto) {
-                logger.info("Creating new job: {}", dto.getTitle());
-                Job job = new Job(dto.getTitle(), dto.getDepartment(), dto.getYearsExperiance(),
-                                dto.getShortDescription(), dto.getDescription(), dto.getSkills());
-                Job saved = jobService.createJob(job);
-                JobDTO out = new JobDTO(saved.getId(), saved.getTitle(), saved.getDepartment(),
-                                saved.getYearsExperiance(), saved.getShortDescription(), saved.getDescription(),
-                                saved.getSkills());
-                logger.info("Job created with ID: {}", saved.getId());
-                return ResponseEntity.ok(out);
+        public ResponseEntity<?> createJob(@RequestBody CreateJobRequest request) {
+                try {
+                        logger.info("Creating new job: {}", request.getTitle());
+                        logger.info("Job Type: {}", request.getJobType());
+                        logger.info("Openings: {}", request.getNumberOfOpenings());
+                        logger.info("Deadline: {}", request.getApplicationDeadline());
+
+                        Job job = new Job(
+                                        request.getTitle(),
+                                        request.getDepartment(),
+                                        request.getYearsExperiance(),
+                                        request.getShortDescription(),
+                                        request.getDescription(),
+                                        request.getSkills());
+
+                        // Set new fields
+                        if (request.getJobType() != null) {
+                                job.setJobType(JobType.valueOf(request.getJobType()));
+                        }
+                        if (request.getNumberOfOpenings() != null) {
+                                job.setNumberOfOpenings(request.getNumberOfOpenings());
+                        }
+                        if (request.getApplicationDeadline() != null) {
+                                job.setApplicationDeadline(request.getApplicationDeadline());
+                        }
+
+                        Job saved = jobService.createJob(job);
+                        JobDTO dto = jobService.convertToDTO(saved);
+
+                        logger.info("Job created with ID: {}", saved.getId());
+                        return ResponseEntity.ok(dto);
+
+                } catch (Exception ex) {
+                        logger.error("Error creating job", ex);
+                        return ResponseEntity.status(500).body("Error creating job: " + ex.getMessage());
+                }
         }
 
         // GET /api/jobs/admin/all - HR views all jobs (even inactive)
@@ -88,6 +121,45 @@ public class JobController {
         public ResponseEntity<List<JobDTO>> allJobsAdmin() {
                 logger.info("Admin fetching all jobs");
                 return ResponseEntity.ok(getAllJobs().getBody());
+        }
+
+        // GET /api/jobs/statistics - Dashboard statistics
+        @GetMapping("/statistics")
+        public ResponseEntity<Map<String, Object>> getStatistics() {
+                logger.info("Fetching job statistics");
+
+                List<Job> allJobs = jobService.getAllJobs();
+
+                Map<String, Object> stats = new HashMap<>();
+                stats.put("totalJobs", allJobs.size());
+                stats.put("activeJobs", allJobs.stream().filter(Job::isActive).count());
+                stats.put("inactiveJobs", allJobs.stream().filter(j -> !j.isActive()).count());
+                stats.put("totalViews", allJobs.stream().mapToLong(Job::getViewCount).sum());
+
+                // Job types breakdown
+                Map<String, Long> jobTypeBreakdown = allJobs.stream()
+                                .collect(Collectors.groupingBy(
+                                                j -> j.getJobType() != null ? j.getJobType().name() : "PERMANENT",
+                                                Collectors.counting()));
+                stats.put("jobTypeBreakdown", jobTypeBreakdown);
+
+                logger.info("Statistics: {}", stats);
+                return ResponseEntity.ok(stats);
+        }
+
+        // PUT /api/jobs/{id}/toggle-status - Toggle job active status
+        @PutMapping("/{id}/toggle-status")
+        public ResponseEntity<?> toggleJobStatus(@PathVariable Long id) {
+                logger.info("Toggling status for job: {}", id);
+
+                return jobService.getJobById(id)
+                                .map(job -> {
+                                        job.setActive(!job.isActive());
+                                        Job updated = jobService.updateJob(job);
+                                        logger.info("Job {} status toggled to: {}", id, updated.isActive());
+                                        return ResponseEntity.ok(jobService.convertToDTO(updated));
+                                })
+                                .orElseGet(() -> ResponseEntity.notFound().build());
         }
 
         // DELETE /api/jobs/{id} - HR deletes a job
@@ -98,7 +170,6 @@ public class JobController {
                 return ResponseEntity.ok("Deleted");
         }
 
-        // these Get controllers manage the candidates for a specific job
         // GET /api/jobs/{jobId}/candidates - Get all candidates for a job
         @GetMapping("/{jobId}/candidates")
         public ResponseEntity<List<ApplicationResponseDTO>> getCandidatesForJob(@PathVariable Long jobId) {
@@ -143,5 +214,91 @@ public class JobController {
                                 })
                                 .collect(Collectors.toList());
                 return ResponseEntity.ok(shortlistResults);
+        }
+
+        // DTO for creating jobs
+        public static class CreateJobRequest {
+                private String title;
+                private String department;
+                private Integer yearsExperiance;
+                private String shortDescription;
+                private String description;
+                private List<String> skills;
+                private String jobType;
+                private Integer numberOfOpenings;
+                private LocalDateTime applicationDeadline;
+
+                // Getters and Setters
+                public String getTitle() {
+                        return title;
+                }
+
+                public void setTitle(String title) {
+                        this.title = title;
+                }
+
+                public String getDepartment() {
+                        return department;
+                }
+
+                public void setDepartment(String department) {
+                        this.department = department;
+                }
+
+                public Integer getYearsExperiance() {
+                        return yearsExperiance;
+                }
+
+                public void setYearsExperiance(Integer yearsExperiance) {
+                        this.yearsExperiance = yearsExperiance;
+                }
+
+                public String getShortDescription() {
+                        return shortDescription;
+                }
+
+                public void setShortDescription(String shortDescription) {
+                        this.shortDescription = shortDescription;
+                }
+
+                public String getDescription() {
+                        return description;
+                }
+
+                public void setDescription(String description) {
+                        this.description = description;
+                }
+
+                public List<String> getSkills() {
+                        return skills;
+                }
+
+                public void setSkills(List<String> skills) {
+                        this.skills = skills;
+                }
+
+                public String getJobType() {
+                        return jobType;
+                }
+
+                public void setJobType(String jobType) {
+                        this.jobType = jobType;
+                }
+
+                public Integer getNumberOfOpenings() {
+                        return numberOfOpenings;
+                }
+
+                public void setNumberOfOpenings(Integer numberOfOpenings) {
+                        this.numberOfOpenings = numberOfOpenings;
+                }
+
+                public LocalDateTime getApplicationDeadline() {
+                        return applicationDeadline;
+                }
+
+                public void setApplicationDeadline(LocalDateTime applicationDeadline) {
+                        this.applicationDeadline = applicationDeadline;
+                }
         }
 }

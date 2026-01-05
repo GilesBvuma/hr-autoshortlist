@@ -4,6 +4,7 @@ import { useNavigate } from "react-router-dom";
 
 export default function CandidateRegister() {
   const navigate = useNavigate();
+
   const [fullName, setFullName] = useState("");
   const [email, setEmail] = useState("");
   const [phone, setPhone] = useState("");
@@ -18,7 +19,6 @@ export default function CandidateRegister() {
     setIsError(false);
     setIsLoading(true);
 
-    // Basic validation
     if (!fullName || !email || !phone || !password) {
       setMessage("All fields are required");
       setIsError(true);
@@ -31,7 +31,7 @@ export default function CandidateRegister() {
         fullName,
         email,
         phone,
-        password
+        password,
       });
 
       console.log("Registration response:", response.data);
@@ -40,11 +40,13 @@ export default function CandidateRegister() {
 
       setTimeout(() => navigate("/auth/CandidateLogin"), 1500);
     } catch (err) {
-      console.error("Registration error:", err);
-      
-      // Better error handling
-      const errorMessage = err.response?.data || err.message || "Registration failed";
-      setMessage(typeof errorMessage === 'string' ? errorMessage : JSON.stringify(errorMessage));
+      const errorMessage =
+        err.response?.data || err.message || "Registration failed";
+      setMessage(
+        typeof errorMessage === "string"
+          ? errorMessage
+          : JSON.stringify(errorMessage)
+      );
       setIsError(true);
     } finally {
       setIsLoading(false);
@@ -52,75 +54,124 @@ export default function CandidateRegister() {
   };
 
   return (
-    <div className="flex justify-center items-center min-h-screen bg-gray-100">
-      <div className="p-6 bg-white shadow-lg rounded-lg w-96">
-        <h2 className="text-2xl font-bold text-center mb-4">Candidate Registration</h2>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#0f172a]">
+      {/* CARD */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 rounded-2xl overflow-hidden shadow-2xl bg-[#111827]">
 
-        <form onSubmit={handleRegister} className="flex flex-col gap-3">
-          <input
-            className="border p-2 rounded"
-            type="text"
-            placeholder="Full Name"
-            value={fullName}
-            onChange={(e) => setFullName(e.target.value)}
-            required
+        {/* LEFT: FORM */}
+        <div className="p-10 text-white">
+          {/* LOGO SPACE */}
+          <div className="mb-10">
+            {/* Replace with your logo */}
+             <img
+            src="/LOGO.png" // optional image
+            alt="Login visual"
+            className=" h-20 w-auto object-contain opacity-100"
           />
+          </div>
 
-          <input
-            className="border p-2 rounded"
-            type="email"
-            placeholder="Email"
-            value={email}
-            onChange={(e) => setEmail(e.target.value)}
-            required
+        {/* MOBILE ONLY: Heading & Login link */}
+<div className="block md:hidden">
+  <h2 className="text-3xl font-bold mb-2">
+    Create new account<span className="text-blue-500">.</span>
+  </h2>
+
+  <p className="text-sm text-slate-400 mb-8">
+    Already a member?{" "}
+    <span
+      onClick={() => navigate("/auth/CandidateLogin")}
+      className="text-blue-500 hover:underline cursor-pointer"
+    >
+      Log in
+    </span>
+  </p>
+</div>
+
+
+          <form onSubmit={handleRegister} className="space-y-4">
+            <input
+              type="text"
+              placeholder="Full name"
+              value={fullName}
+              onChange={(e) => setFullName(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-[#1f2937] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <input
+              type="email"
+              placeholder="Email address"
+              value={email}
+              onChange={(e) => setEmail(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-[#1f2937] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <input
+              type="tel"
+              placeholder="Phone number"
+              value={phone}
+              onChange={(e) => setPhone(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-[#1f2937] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <input
+              type="password"
+              placeholder="Password"
+              value={password}
+              onChange={(e) => setPassword(e.target.value)}
+              className="w-full px-4 py-3 rounded-lg bg-[#1f2937] text-white placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            />
+
+            <button
+              disabled={isLoading}
+              className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white py-3 rounded-lg font-semibold transition disabled:bg-slate-500"
+            >
+              {isLoading ? "Creating account..." : "Create account"}
+            </button>
+          </form>
+
+          {message && (
+            <p
+              className={`mt-4 text-sm ${
+                isError ? "text-red-400" : "text-green-400"
+              }`}
+            >
+              {message}
+            </p>
+          )}
+        </div>
+
+        {/* RIGHT: IMAGE / VISUAL */}
+        <div className="hidden md:block relative">
+          <img
+            src="/Desktop - 6.jpg" // optional background image
+            alt="Register"
+            className="absolute inset-0 w-full h-full object-cover opacity-40"
+            
           />
+          {/* DESKTOP ONLY: Heading on image */}
+<div className="absolute top-10 right-10 z-10 hidden md:block text-right text-white">
+  <h2 className="text-3xl font-bold mb-2">
+    Create new account<span className="text-blue-400">.</span>
+  </h2>
 
-          <input
-            className="border p-2 rounded"
-            type="tel"
-            placeholder="Phone Number"
-            value={phone}
-            onChange={(e) => setPhone(e.target.value)}
-            required
-          />
+  <p className="text-sm text-slate-300">
+    Already a member?{" "}
+    <span
+      onClick={() => navigate("/auth/CandidateLogin")}
+      className="text-blue-400 hover:underline cursor-pointer"
+    >
+      Log in
+    </span>
+  </p>
+</div>
 
-          <input
-            className="border p-2 rounded"
-            type="password"
-            placeholder="Password"
-            value={password}
-            onChange={(e) => setPassword(e.target.value)}
-            required
-            minLength={6}
-          />
-
-          <button 
-            className="bg-green-600 text-white p-2 rounded hover:bg-green-700 disabled:bg-gray-400"
-            disabled={isLoading}
-          >
-            {isLoading ? "Registering..." : "Register"}
-          </button>
-        </form>
-
-        {message && (
-          <p className={`mt-3 text-center ${isError ? "text-red-600" : "text-green-600"}`}>
-            {message}
-          </p>
-        )}
-
-        <p className="text-center text-sm mt-4">
-          Already have an account?{" "}
-          <span
-            onClick={() => navigate("/auth/CandidateLogin")}
-            className="text-blue-600 hover:underline cursor-pointer"
-          >
-            Login
-          </span>
-        </p>
+          <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/20" />
+        </div>
       </div>
     </div>
   );
 }
+
 
 
 

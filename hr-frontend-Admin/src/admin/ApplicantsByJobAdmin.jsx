@@ -1,7 +1,6 @@
 import { useEffect, useState } from "react";
 import { useParams } from "react-router-dom";
 import adminApi from "../api/adminApi";
-import AdminNavbar from "../components/AdminNavbar";
 
 export default function ApplicantsByJobAdmin() {
   const { jobId } = useParams();
@@ -9,21 +8,29 @@ export default function ApplicantsByJobAdmin() {
   const [jobTitle, setJobTitle] = useState("");
   const [loading, setLoading] = useState(false);
 
-  useEffect(() => {
-    const loadData = async () => {
-      try {
-        const jobRes = await adminApi.get(`/jobs/${jobId}`);
-        setJobTitle(jobRes.data.title);
+useEffect(() => {
+  const loadData = async () => {
+    try {
+      console.log("📥 Loading data for job:", jobId);
+      
+      // Fetch job details
+      const jobRes = await adminApi.get(`/api/jobs/${jobId}`);
+      setJobTitle(jobRes.data.title);
+      console.log("✅ Job loaded:", jobRes.data.title);
 
-        const candRes = await adminApi.get(`/jobs/${jobId}/candidates`);
-        setCandidates(candRes.data);
-      } catch (err) {
-        console.error("Error loading applicants", err);
-      }
-    };
+      // FIXED: Use the correct endpoint
+      const candRes = await adminApi.get(`/api/applications/byJob/${jobId}`);
+      console.log("✅ Applications loaded:", candRes.data);
+      setCandidates(candRes.data);
+    } catch (err) {
+      console.error("❌ Error loading applicants:", err);
+      console.error("Error details:", err.response?.data);
+    }
+  };
 
-    loadData();
-  }, [jobId]);
+  loadData();
+}, [jobId]);
+
 
   const retrieveShortlist = async () => {
     setLoading(true);
@@ -54,41 +61,76 @@ export default function ApplicantsByJobAdmin() {
   };
 
   return (
-    <div>
-      <AdminNavbar />
+  <>
+    
 
-      <div className="p-6">
-        <h1 className="text-2xl font-bold mb-2">
+    {/* Page background */}
+    <div className="min-h-screen w-full bg-gradient-to-b from-slate-50 via-blue-100 to-blue-300 animate-fadeIn">
+
+      {/* Header */}
+      <div className="w-full bg-gradient-to-r from-indigo-600 to-blue-600 text-white p-10 shadow-xl">
+        <h1 className="text-3xl font-bold">
           Applicants for: {jobTitle || `Job #${jobId}`}
         </h1>
+        <p className="text-sm opacity-90 mt-1">
+          Manage and review submitted applications
+        </p>
+      </div>
 
-        <button
-          onClick={retrieveShortlist}
-          disabled={loading}
-          className="bg-green-600 text-white px-4 py-2 rounded mb-4 hover:bg-green-700 disabled:bg-gray-400"
-        >
-          {loading ? "Loading..." : "Retrieve Shortlist"}
-        </button>
+      {/* Content */}
+      <div className="w-full px-10 py-8">
 
+        {/* Action bar */}
+        <div className="flex items-center justify-between mb-8">
+          <button
+            onClick={retrieveShortlist}
+            disabled={loading}
+            className="bg-emerald-600 text-white px-6 py-2 rounded-xl
+                       shadow-md transition-all duration-300
+                       hover:bg-emerald-700 hover:scale-105
+                       active:scale-95 disabled:bg-gray-400"
+          >
+            {loading ? "Loading..." : "Retrieve Shortlist"}
+          </button>
+        </div>
+
+        {/* Empty state */}
         {candidates.length === 0 ? (
-          <p>No applicants yet.</p>
+          <div className="bg-white rounded-3xl shadow-lg p-10 text-center text-gray-600">
+            No applicants yet.
+          </div>
         ) : (
-          <ul className="space-y-3">
+          <ul className="space-y-8">
             {candidates.map((c) => (
-              <li key={c.id} className="border p-3 rounded">
-                <div className="flex justify-between items-start">
+              <li
+                key={c.id}
+                className="bg-white rounded-3xl shadow-xl p-8
+                           transform transition-all duration-300
+                           hover:-translate-y-1 hover:shadow-2xl"
+              >
+                <div className="flex flex-col md:flex-row md:justify-between md:items-start gap-6">
+
+                  {/* Candidate info */}
                   <div>
-                    <strong className="text-lg">{c.fullname}</strong>
-                    <p className="text-sm text-gray-600">
-                      Email: {c.email}
+                    <h2 className="text-xl font-semibold text-gray-800">
+                      {c.fullname}
+                    </h2>
+
+                    <p className="text-sm text-gray-600 mt-1">
+                      📧 {c.email}
                     </p>
                     <p className="text-sm text-gray-600">
-                      Phone: {c.phone}
+                      📞 {c.phone}
                     </p>
-                    <p className="mt-2 text-sm">{c.skills}</p>
+
+                    <p className="mt-4 text-gray-700">
+                      {c.skills}
+                    </p>
                   </div>
 
-                  <div className="flex flex-col gap-2">
+                  {/* Actions */}
+                  <div className="flex flex-col gap-3 min-w-[160px]">
+
                     {c.cvDownloadUrl && (
                       <a
                         href={`${adminApi.defaults.baseURL?.replace(
@@ -97,7 +139,9 @@ export default function ApplicantsByJobAdmin() {
                         ) || "http://localhost:8080"}${c.cvDownloadUrl}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm text-blue-600 underline"
+                        className="text-center bg-blue-600 text-white px-4 py-2 rounded-xl
+                                   transition-all duration-300
+                                   hover:bg-blue-700 hover:scale-105"
                       >
                         Download CV
                       </a>
@@ -111,7 +155,9 @@ export default function ApplicantsByJobAdmin() {
                         ) || "http://localhost:8080"}${c.letterDownloadUrl}`}
                         target="_blank"
                         rel="noreferrer"
-                        className="text-sm text-blue-600 underline"
+                        className="text-center bg-indigo-600 text-white px-4 py-2 rounded-xl
+                                   transition-all duration-300
+                                   hover:bg-indigo-700 hover:scale-105"
                       >
                         Download Letter
                       </a>
@@ -119,11 +165,15 @@ export default function ApplicantsByJobAdmin() {
 
                     <button
                       onClick={() => deleteApplication(c.id)}
-                      className="bg-red-600 text-white px-3 py-1 rounded text-sm hover:bg-red-700"
+                      className="bg-red-600 text-white px-4 py-2 rounded-xl
+                                 transition-all duration-300
+                                 hover:bg-red-700 hover:scale-105
+                                 active:scale-95"
                     >
                       Delete
                     </button>
                   </div>
+
                 </div>
               </li>
             ))}
@@ -131,7 +181,9 @@ export default function ApplicantsByJobAdmin() {
         )}
       </div>
     </div>
-  );
+  </>
+);
+
 }
 
 

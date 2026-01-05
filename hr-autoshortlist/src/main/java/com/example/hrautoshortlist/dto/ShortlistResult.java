@@ -2,26 +2,26 @@ package com.example.hrautoshortlist.dto;
 
 public class ShortlistResult {
     private Long id;
-    private String fullName;
+    private String name;
     private String email;
     private double computedScore;
     private boolean shortlisted;
-    private String reason; // short explanation
+    private String reason;
 
     public ShortlistResult() {
     }
 
-    public ShortlistResult(Long id, String fullName, String email, double computedScore, boolean shortlisted,
+    public ShortlistResult(Long id, String name, String email, double computedScore, boolean shortlisted,
             String reason) {
         this.id = id;
-        this.fullName = fullName;
+        this.name = name;
         this.email = email;
         this.computedScore = computedScore;
         this.shortlisted = shortlisted;
         this.reason = reason;
     }
 
-    // getters & setters
+    // Getters and Setters
     public Long getId() {
         return id;
     }
@@ -30,12 +30,12 @@ public class ShortlistResult {
         this.id = id;
     }
 
-    public String getFullName() {
-        return fullName;
+    public String getName() {
+        return name;
     }
 
-    public void setFullName(String fullName) {
-        this.fullName = fullName;
+    public void setName(String name) {
+        this.name = name;
     }
 
     public String getEmail() {

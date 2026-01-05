@@ -9,9 +9,13 @@ import java.util.List;
 @Repository
 public interface ApplicationRepository extends JpaRepository<Application, Long> {
 
-    List<Application> findByJobId(Long jobId);
+    // FIXED: Changed from findByJobId to findByJob_Id (Spring Data JPA syntax for
+    // nested properties)
+    List<Application> findByJob_Id(Long jobId);
 
-    boolean existsByCandidateUserIdAndJobId(Long candidateUserId, Long jobId);
+    // FIXED: Same here
+    boolean existsByCandidateUser_IdAndJob_Id(Long candidateUserId, Long jobId);
 
-    List<Application> findByCandidateUserId(Long candidateUserId);
+    // FIXED: And here
+    List<Application> findByCandidateUser_Id(Long candidateUserId);
 }

@@ -40,19 +40,31 @@ public class ApplicationService {
             MultipartFile cvFile,
             MultipartFile letterFile) {
 
-        logger.info("Submitting application - Job ID: {}, Candidate ID: {}", jobId, candidateUserId);
+        logger.info("=== SUBMIT APPLICATION ===");
+        logger.info("Job ID: {}", jobId);
+        logger.info("Candidate ID: {}", candidateUserId);
 
         // Fetch candidate
         CandidateUser candidate = candidateUserRepository.findById(candidateUserId)
-                .orElseThrow(() -> new IllegalArgumentException("Candidate not found with ID: " + candidateUserId));
+                .orElseThrow(() -> {
+                    logger.error("Candidate not found: {}", candidateUserId);
+                    return new IllegalArgumentException("Candidate not found with ID: " + candidateUserId);
+                });
+
+        logger.info("✓ Candidate found: {}", candidate.getFullName());
 
         // Fetch job
         Job job = jobRepository.findById(jobId)
-                .orElseThrow(() -> new IllegalArgumentException("Job not found with ID: " + jobId));
+                .orElseThrow(() -> {
+                    logger.error("Job not found: {}", jobId);
+                    return new IllegalArgumentException("Job not found with ID: " + jobId);
+                });
+
+        logger.info("✓ Job found: {}", job.getTitle());
 
         // Check for duplicate application
-        if (applicationRepository.existsByCandidateUserIdAndJobId(candidateUserId, jobId)) {
-            logger.warn("Duplicate application attempt - Candidate: {}, Job: {}", candidateUserId, jobId);
+        if (applicationRepository.existsByCandidateUser_IdAndJob_Id(candidateUserId, jobId)) {
+            logger.warn("✗ Duplicate application - Candidate: {}, Job: {}", candidateUserId, jobId);
             throw new IllegalStateException("You have already applied for this job");
         }
 
@@ -62,12 +74,12 @@ public class ApplicationService {
 
         if (cvFile != null && !cvFile.isEmpty()) {
             cvFilename = storageService.storeFile(cvFile);
-            logger.info("CV stored: {}", cvFilename);
+            logger.info("✓ CV stored: {}", cvFilename);
         }
 
         if (letterFile != null && !letterFile.isEmpty()) {
             letterFilename = storageService.storeFile(letterFile);
-            logger.info("Letter stored: {}", letterFilename);
+            logger.info("✓ Letter stored: {}", letterFilename);
         }
 
         // Create application
@@ -78,20 +90,23 @@ public class ApplicationService {
                 cvFilename,
                 letterFilename);
 
+        logger.info("Saving application to database...");
         Application saved = applicationRepository.save(application);
-        logger.info("Application submitted successfully with ID: {}", saved.getId());
+        logger.info("✓ Application saved successfully with ID: {}", saved.getId());
 
         return saved;
     }
 
     public List<Application> getApplicationsForJob(Long jobId) {
         logger.info("Fetching applications for job ID: {}", jobId);
-        return applicationRepository.findByJobId(jobId);
+        List<Application> apps = applicationRepository.findByJob_Id(jobId);
+        logger.info("Found {} applications for job {}", apps.size(), jobId);
+        return apps;
     }
 
     public List<Application> getApplicationsForCandidate(Long candidateUserId) {
         logger.info("Fetching applications for candidate ID: {}", candidateUserId);
-        return applicationRepository.findByCandidateUserId(candidateUserId);
+        return applicationRepository.findByCandidateUser_Id(candidateUserId);
     }
 
     public Optional<Application> getApplication(Long id) {
