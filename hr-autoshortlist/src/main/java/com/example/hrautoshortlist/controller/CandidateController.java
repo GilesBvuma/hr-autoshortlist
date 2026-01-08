@@ -14,7 +14,7 @@ import java.util.List;
 @RequestMapping("/api/candidates") // Base URL for all endpoints . Meaning all methods in this controller start
                                    // with "/api/candidates" so for example the @GetMapping {"id"} would look like
                                    // {"api/candidate/id"}
-@CrossOrigin(origins = "*") // allows frontend to connect later
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" }) // Specific origins
 public class CandidateController {
 
     @Autowired

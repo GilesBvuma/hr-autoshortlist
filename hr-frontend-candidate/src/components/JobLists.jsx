@@ -1,13 +1,18 @@
 import { useEffect, useState } from "react";
 import candidateApi from "../lib/axios";
 import { Link } from "react-router-dom";
-import CandidateNavbar from "../components/CandidateNavbar";
+import CandidateSidebar from "../components/CandidateSidebar";
 
 export default function JobsList() {
   const [jobs, setJobs] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
   const [filter, setFilter] = useState("ALL"); // ALL, PERMANENT, INTERNSHIP, GRADUATE_TRAINEE
+
+  useEffect(() => {
+    // Scroll to top on mount
+    window.scrollTo(0, 0);
+  }, []);
 
   useEffect(() => {
     const fetchJobs = async () => {
@@ -30,9 +35,9 @@ export default function JobsList() {
 
   const getJobTypeBadge = (type) => {
     const badges = {
-      PERMANENT: { class: "bg-blue-100 text-blue-800", label: "Permanent" },
-      INTERNSHIP: { class: "bg-purple-100 text-purple-800", label: "Internship" },
-      GRADUATE_TRAINEE: { class: "bg-green-100 text-green-800", label: "Graduate Program" },
+      PERMANENT: { class: "bg-sky-100 text-sky-800", label: "Permanent" },
+      INTERNSHIP: { class: "bg-indigo-100 text-indigo-800", label: "Internship" },
+      GRADUATE_TRAINEE: { class: "bg-emerald-100 text-emerald-800", label: "Graduate Program" },
     };
     return badges[type] || badges.PERMANENT;
   };
@@ -42,7 +47,7 @@ export default function JobsList() {
     const date = new Date(dateString);
     const now = new Date();
     const daysLeft = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
-    
+
     return {
       formatted: date.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" }),
       daysLeft,
@@ -51,8 +56,8 @@ export default function JobsList() {
     };
   };
 
-  const filteredJobs = filter === "ALL" 
-    ? jobs 
+  const filteredJobs = filter === "ALL"
+    ? jobs
     : jobs.filter(job => job.jobType === filter);
 
   // Skeleton Loader
@@ -72,10 +77,10 @@ export default function JobsList() {
   );
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50 to-slate-100">
-      <CandidateNavbar />
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      <CandidateSidebar />
 
-      <div className="px-6 pt-24 pb-10 max-w-7xl mx-auto">
+      <div className="flex-1 w-full lg:ml-64 px-4 sm:px-6 pt-24 lg:pt-12 pb-10 max-w-7xl mx-auto">
         {/* Header */}
         <div className="mb-8">
           <h2 className="text-4xl font-bold text-slate-900 mb-2">
@@ -92,15 +97,14 @@ export default function JobsList() {
             <button
               key={type}
               onClick={() => setFilter(type)}
-              className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-200 ${
-                filter === type
+              className={`px-6 py-2 rounded-full font-medium whitespace-nowrap transition-all duration-200 ${filter === type
                   ? "bg-blue-600 text-white shadow-lg shadow-blue-600/30"
                   : "bg-white text-slate-700 hover:bg-slate-100 border border-slate-200"
-              }`}
+                }`}
             >
-              {type === "ALL" ? "All Jobs" : 
-               type === "PERMANENT" ? "Permanent" :
-               type === "INTERNSHIP" ? "Internships" : "Graduate Programs"}
+              {type === "ALL" ? "All Jobs" :
+                type === "PERMANENT" ? "Permanent" :
+                  type === "INTERNSHIP" ? "Internships" : "Graduate Programs"}
             </button>
           ))}
         </div>
@@ -189,17 +193,16 @@ export default function JobsList() {
 
                 {/* Deadline Warning */}
                 {deadline && !deadline.isExpired && (
-                  <div className={`mb-4 p-3 rounded-lg ${
-                    deadline.isUrgent 
-                      ? "bg-red-50 border border-red-200" 
+                  <div className={`mb-4 p-3 rounded-lg ${deadline.isUrgent
+                      ? "bg-red-50 border border-red-200"
                       : "bg-blue-50 border border-blue-200"
-                  }`}>
+                    }`}>
                     <div className="flex items-center gap-2">
                       <svg className={`w-4 h-4 ${deadline.isUrgent ? "text-red-600" : "text-blue-600"}`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
                         <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                       </svg>
                       <p className={`text-xs font-semibold ${deadline.isUrgent ? "text-red-700" : "text-blue-700"}`}>
-                        {deadline.isUrgent 
+                        {deadline.isUrgent
                           ? `⚠️ ${deadline.daysLeft} day${deadline.daysLeft !== 1 ? 's' : ''} left!`
                           : `Closes ${deadline.formatted}`
                         }
@@ -219,11 +222,10 @@ export default function JobsList() {
                 {/* Action Button */}
                 <Link
                   to={`/jobs/${job.id}`}
-                  className={`inline-block text-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${
-                    deadline && deadline.isExpired
+                  className={`inline-block text-center px-6 py-3 rounded-xl font-semibold transition-all duration-200 ${deadline && deadline.isExpired
                       ? "bg-gray-200 text-gray-500 cursor-not-allowed"
                       : "bg-blue-600 text-white hover:bg-blue-700 hover:scale-102"
-                  }`}
+                    }`}
                   onClick={(e) => {
                     if (deadline && deadline.isExpired) {
                       e.preventDefault();

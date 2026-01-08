@@ -27,26 +27,47 @@ export default function CandidateRegister() {
     }
 
     try {
-      const response = await axios.post("/auth/CandidateRegister", {
+      const normalizedEmail = email.trim().toLowerCase();
+      console.log("🔵 Registering in Firebase:", normalizedEmail);
+
+      // 1. Create User in Firebase
+      const { createUserWithEmailAndPassword, updateProfile } = await import("firebase/auth");
+      const { auth } = await import("../firebase");
+
+      const userCredential = await createUserWithEmailAndPassword(auth, normalizedEmail, password);
+      // Update display name
+      await updateProfile(userCredential.user, { displayName: fullName });
+      console.log("✅ Firebase registration successful");
+
+      // 2. Create User in Backend (Sync)
+      console.log("🔵 Syncing registration with backend...");
+      const res = await axios.post("/auth/CandidateRegister", {
         fullName,
-        email,
+        email: normalizedEmail,
         phone,
         password,
       });
 
-      console.log("Registration response:", response.data);
-      setMessage("Registered successfully!");
+      const registeredUser = res.data;
+      console.log("✅ Backend sync successful:", registeredUser);
+
+      // 3. Optional: Auto-login or just prepare for redirect
+      // For now, we'll let existing logic handle the redirect to login
+      // but we could also populate the store here.
+
+      setMessage("Registered successfully! Redirecting to login...");
       setIsError(false);
 
       setTimeout(() => navigate("/auth/CandidateLogin"), 1500);
     } catch (err) {
-      const errorMessage =
-        err.response?.data || err.message || "Registration failed";
-      setMessage(
-        typeof errorMessage === "string"
-          ? errorMessage
-          : JSON.stringify(errorMessage)
-      );
+      console.error("Registration error:", err);
+      let msg = "Registration failed";
+      if (err.code === 'auth/email-already-in-use') {
+        msg = "Email is already registered in Firebase.";
+      } else if (err.response?.data) {
+        msg = err.response.data;
+      }
+      setMessage(msg);
       setIsError(true);
     } finally {
       setIsLoading(false);
@@ -59,33 +80,34 @@ export default function CandidateRegister() {
       <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 rounded-2xl overflow-hidden shadow-2xl bg-[#111827]">
 
         {/* LEFT: FORM */}
-        <div className="p-10 text-white">
+        <div className="p-8 sm:p-12 flex flex-col justify-center bg-[#111827] text-white">
           {/* LOGO SPACE */}
-          <div className="mb-10">
-            {/* Replace with your logo */}
-             <img
-            src="/LOGO.png" // optional image
-            alt="Login visual"
-            className=" h-20 w-auto object-contain opacity-100"
-          />
+          <div className="mb-8 flex flex-col items-center md:items-start">
+            <div className="bg-white/5 p-4 rounded-2xl backdrop-blur-sm border border-white/10 mb-6 group transition-all duration-500 hover:border-blue-500/50">
+              <img
+                src="/LOGO.png"
+                alt="Logo"
+                className="h-16 w-auto object-contain drop-shadow-[0_0_15px_rgba(59,130,246,0.3)] group-hover:scale-105 transition-transform"
+              />
+            </div>
           </div>
 
-        {/* MOBILE ONLY: Heading & Login link */}
-<div className="block md:hidden">
-  <h2 className="text-3xl font-bold mb-2">
-    Create new account<span className="text-blue-500">.</span>
-  </h2>
+          {/* MOBILE ONLY: Heading & Login link */}
+          <div className="block md:hidden">
+            <h2 className="text-3xl font-bold mb-2">
+              Create new account<span className="text-blue-500">.</span>
+            </h2>
 
-  <p className="text-sm text-slate-400 mb-8">
-    Already a member?{" "}
-    <span
-      onClick={() => navigate("/auth/CandidateLogin")}
-      className="text-blue-500 hover:underline cursor-pointer"
-    >
-      Log in
-    </span>
-  </p>
-</div>
+            <p className="text-sm text-slate-400 mb-8">
+              Already a member?{" "}
+              <span
+                onClick={() => navigate("/auth/CandidateLogin")}
+                className="text-blue-500 hover:underline cursor-pointer"
+              >
+                Log in
+              </span>
+            </p>
+          </div>
 
 
           <form onSubmit={handleRegister} className="space-y-4">
@@ -131,9 +153,8 @@ export default function CandidateRegister() {
 
           {message && (
             <p
-              className={`mt-4 text-sm ${
-                isError ? "text-red-400" : "text-green-400"
-              }`}
+              className={`mt-4 text-sm ${isError ? "text-red-400" : "text-green-400"
+                }`}
             >
               {message}
             </p>
@@ -146,24 +167,24 @@ export default function CandidateRegister() {
             src="/Desktop - 6.jpg" // optional background image
             alt="Register"
             className="absolute inset-0 w-full h-full object-cover opacity-40"
-            
+
           />
           {/* DESKTOP ONLY: Heading on image */}
-<div className="absolute top-10 right-10 z-10 hidden md:block text-right text-white">
-  <h2 className="text-3xl font-bold mb-2">
-    Create new account<span className="text-blue-400">.</span>
-  </h2>
+          <div className="absolute top-10 right-10 z-10 hidden md:block text-right text-white">
+            <h2 className="text-3xl font-bold mb-2">
+              Create new account<span className="text-blue-400">.</span>
+            </h2>
 
-  <p className="text-sm text-slate-300">
-    Already a member?{" "}
-    <span
-      onClick={() => navigate("/auth/CandidateLogin")}
-      className="text-blue-400 hover:underline cursor-pointer"
-    >
-      Log in
-    </span>
-  </p>
-</div>
+            <p className="text-sm text-slate-300">
+              Already a member?{" "}
+              <span
+                onClick={() => navigate("/auth/CandidateLogin")}
+                className="text-blue-400 hover:underline cursor-pointer"
+              >
+                Log in
+              </span>
+            </p>
+          </div>
 
           <div className="absolute inset-0 bg-gradient-to-br from-black/60 to-black/20" />
         </div>

@@ -23,14 +23,30 @@ public class CandidateUserService {
     public CandidateUser register(CandidateUser a) {
         logger.info("Attempting to register user with email: {}", a.getEmail());
 
-        if (candidateUserRepository.existsByEmail(a.getEmail())) {
-            logger.warn("Email already registered: {}", a.getEmail());
-            throw new IllegalArgumentException("Email already registered");
+        // 1. Check if user already exists (case-insensitive)
+        CandidateUser existing = candidateUserRepository.findByEmailIgnoreCase(a.getEmail());
+        if (existing != null) {
+            // Check if they already have a password (truly registered)
+            if (existing.getPassword() != null && !existing.getPassword().isEmpty()) {
+                logger.warn("Email already registered: {}", a.getEmail());
+                throw new IllegalArgumentException("Email already registered");
+            }
+            
+            // If they exist but have no password, they were likely auto-created by the Firebase filter
+            logger.info("Found auto-created profile for {}, updating with registration data", a.getEmail());
+            existing.setFullName(a.getFullName());
+            existing.setPhone(a.getPhone());
+            if (a.getPassword() != null) {
+                existing.setPassword(encoder.encode(a.getPassword()));
+            }
+            return candidateUserRepository.save(existing);
         }
 
-        // Hash the password
-        String hashedPassword = encoder.encode(a.getPassword());
-        a.setPassword(hashedPassword);
+        // 2. Hash the password
+        if (a.getPassword() != null) {
+            a.setPassword(encoder.encode(a.getPassword()));
+        }
+        a.setEmail(a.getEmail().toLowerCase()); // Always lowercase
 
         logger.info("Saving user to database...");
         CandidateUser saved = candidateUserRepository.save(a);
@@ -42,9 +58,14 @@ public class CandidateUserService {
     public boolean validateLogin(String email, String rawPassword) {
         logger.info("Validating login for email: {}", email);
 
-        CandidateUser a = candidateUserRepository.findByEmail(email);
+        CandidateUser a = candidateUserRepository.findByEmailIgnoreCase(email);
         if (a == null) {
             logger.warn("User not found: {}", email);
+            return false;
+        }
+
+        if (a.getPassword() == null) {
+            logger.warn("User has no password (likely social login only): {}", email);
             return false;
         }
 
@@ -58,7 +79,7 @@ public class CandidateUserService {
     }
 
     public CandidateUser findByEmail(String email) {
-        return candidateUserRepository.findByEmail(email);
+        return candidateUserRepository.findByEmailIgnoreCase(email);
     }
 
     public CandidateUser saveUser(CandidateUser user) {

@@ -30,6 +30,15 @@ public class Application {
     @Column(name = "letter_filename")
     private String letterFilename;
 
+    @Column(name = "candidate_qualifications", length = 2000)
+    private String candidateQualifications;
+
+    @Column(name = "certifications_filename")
+    private String certificationsFilename;
+
+    @Column(name = "shortlisted", columnDefinition = "boolean default false")
+    private boolean shortlisted = false;
+
     public Application() {
     }
 
@@ -102,5 +111,29 @@ public class Application {
     // Alias for compatibility with shortlist service
     public String getSkillsSummary() {
         return skills;
+    }
+
+    public String getCandidateQualifications() {
+        return candidateQualifications;
+    }
+
+    public void setCandidateQualifications(String candidateQualifications) {
+        this.candidateQualifications = candidateQualifications;
+    }
+
+    public String getCertificationsFilename() {
+        return certificationsFilename;
+    }
+
+    public void setCertificationsFilename(String certificationsFilename) {
+        this.certificationsFilename = certificationsFilename;
+    }
+
+    public boolean isShortlisted() {
+        return shortlisted;
+    }
+
+    public void setShortlisted(boolean shortlisted) {
+        this.shortlisted = shortlisted;
     }
 }

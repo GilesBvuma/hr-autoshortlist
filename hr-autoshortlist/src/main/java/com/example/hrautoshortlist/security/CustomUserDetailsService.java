@@ -18,21 +18,36 @@ public class CustomUserDetailsService implements UserDetailsService {
     @Autowired
     private UserRepository userRepository;
 
-    // This method loads a user by username (used by Spring Security)
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsername(username);
+    @Autowired
+    private com.example.hrautoshortlist.repository.CandidateUserRepository candidateUserRepository;
 
+    // This method loads a user by username or email (used by Spring Security)
+    @Override
+    public UserDetails loadUserByUsername(String usernameOrEmail) throws UsernameNotFoundException {
+        // 1. Try finding in Admin Users (by username first)
+        User user = userRepository.findByUsername(usernameOrEmail);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found: " + username);
+            user = userRepository.findByEmailIgnoreCase(usernameOrEmail);
         }
 
-        // Convert your User entity into a Spring Security UserDetails object
-        // No roles yet, so we pass an empty list
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                new ArrayList<>());
+        if (user != null) {
+            return new org.springframework.security.core.userdetails.User(
+                    user.getUsername(),
+                    user.getPassword(),
+                    new ArrayList<>()); // No roles yet
+        }
+
+        // 2. Try finding in Candidate Users (by email)
+        com.example.hrautoshortlist.entity.CandidateUser candidate = candidateUserRepository.findByEmailIgnoreCase(usernameOrEmail);
+        if (candidate != null) {
+            // Use their email as the "username" for Spring Security
+            return new org.springframework.security.core.userdetails.User(
+                    candidate.getEmail(),
+                    candidate.getPassword() != null ? candidate.getPassword() : "", // Empty if Google user
+                    new ArrayList<>());
+        }
+
+        throw new UsernameNotFoundException("User not found: " + usernameOrEmail);
     }
 }
 /*

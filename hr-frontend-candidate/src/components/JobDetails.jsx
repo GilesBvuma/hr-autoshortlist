@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, Link } from "react-router-dom";
 import candidateApi from "../lib/axios";
-import CandidateNavbar from "../components/CandidateNavbar";
+import CandidateSidebar from "../components/CandidateSidebar";
 
 function JobDetails() {
   const { id } = useParams();
@@ -41,9 +41,9 @@ function JobDetails() {
   const formatDate = (dateString) => {
     if (!dateString) return null;
     const date = new Date(dateString);
-    return date.toLocaleDateString("en-US", { 
-      month: "long", 
-      day: "numeric", 
+    return date.toLocaleDateString("en-US", {
+      month: "long",
+      day: "numeric",
       year: "numeric",
       hour: "2-digit",
       minute: "2-digit"
@@ -55,7 +55,7 @@ function JobDetails() {
     const date = new Date(dateString);
     const now = new Date();
     const daysLeft = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
-    
+
     return {
       formatted: formatDate(dateString),
       daysLeft,
@@ -66,9 +66,9 @@ function JobDetails() {
 
   if (loading) {
     return (
-      <div>
-        <CandidateNavbar />
-        <div className="p-5 max-w-4xl mx-auto">
+      <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+        <CandidateSidebar />
+        <div className="flex-1 lg:ml-64 p-5 max-w-4xl mx-auto pt-24 lg:pt-12">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-slate-200 rounded w-3/4"></div>
             <div className="h-4 bg-slate-200 rounded w-1/2"></div>
@@ -80,19 +80,21 @@ function JobDetails() {
   }
 
   if (error) return (
-    <div>
-      <CandidateNavbar />
-      <div className="p-5 max-w-4xl mx-auto text-center">
-        <p className="text-red-500">{error}</p>
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      <CandidateSidebar />
+      <div className="flex-1 lg:ml-64 p-5 max-w-4xl mx-auto text-center pt-24 lg:pt-12">
+        <p className="text-red-500 font-semibold">{error}</p>
+        <Link to="/jobs" className="mt-4 inline-block text-blue-600 hover:underline font-medium">Return to Jobs</Link>
       </div>
     </div>
   );
 
   if (!job) return (
-    <div>
-      <CandidateNavbar />
-      <div className="p-5 max-w-4xl mx-auto text-center">
-        <p>Job not found.</p>
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      <CandidateSidebar />
+      <div className="flex-1 lg:ml-64 p-5 max-w-4xl mx-auto text-center pt-24 lg:pt-12">
+        <p className="text-slate-600 font-semibold">Job not found.</p>
+        <Link to="/jobs" className="mt-4 inline-block text-blue-600 hover:underline font-medium">Return to Jobs</Link>
       </div>
     </div>
   );
@@ -102,13 +104,13 @@ function JobDetails() {
   const postedDate = formatDate(job.createdAt);
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50 to-slate-100">
-      <CandidateNavbar />
-      
-      <div className="px-6 pt-24 pb-10 max-w-5xl mx-auto">
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      <CandidateSidebar />
+
+      <div className="flex-1 lg:ml-64 px-4 sm:px-6 pt-24 lg:pt-12 pb-10 max-w-5xl mx-auto">
         {/* Back Button */}
-        <Link 
-          to="/jobs" 
+        <Link
+          to="/jobs"
           className="inline-flex items-center gap-2 text-slate-600 hover:text-slate-900 mb-6 transition-colors duration-200"
         >
           <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
@@ -122,7 +124,7 @@ function JobDetails() {
           {/* Header Section */}
           <div className="bg-gradient-to-r from-blue-600 to-cyan-600 text-white p-8">
             <h1 className="text-4xl font-bold mb-4">{job.title}</h1>
-            
+
             <div className="flex flex-wrap gap-3 mb-4">
               <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
                 {typeBadge.label}
@@ -132,9 +134,9 @@ function JobDetails() {
                   📍 {job.department}
                 </span>
               )}
-              {job.numberOfOpenings > 1 && (
+              {job.numberOfOpenings > 0 && (
                 <span className="px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full text-sm font-semibold">
-                  {job.numberOfOpenings} Openings
+                  Target: {job.numberOfOpenings} Position{job.numberOfOpenings !== 1 ? 's' : ''}
                 </span>
               )}
             </div>
@@ -154,7 +156,7 @@ function JobDetails() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className={`font-bold ${deadline.isUrgent ? "text-red-700" : "text-blue-700"}`}>
-                  {deadline.isUrgent 
+                  {deadline.isUrgent
                     ? `⚠️ Applications close in ${deadline.daysLeft} day${deadline.daysLeft !== 1 ? 's' : ''}!`
                     : `Application Deadline: ${deadline.formatted}`
                   }

@@ -18,10 +18,11 @@ import java.util.List;
 import java.util.Map;
 import java.util.HashMap;
 import java.util.stream.Collectors;
+import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/jobs")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" })
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" }, methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
 public class JobController {
 
         private static final Logger logger = LoggerFactory.getLogger(JobController.class);
@@ -102,6 +103,9 @@ public class JobController {
                         }
                         if (request.getApplicationDeadline() != null) {
                                 job.setApplicationDeadline(request.getApplicationDeadline());
+                        }
+                        if (request.getRequiredQualifications() != null) {
+                                job.setRequiredQualifications(request.getRequiredQualifications());
                         }
 
                         Job saved = jobService.createJob(job);
@@ -209,11 +213,36 @@ public class JobController {
                                                         app.getCandidateUser() != null
                                                                         ? app.getCandidateUser().getEmail()
                                                                         : "");
-                                        result.put("shortlisted", true);
+                                        result.put("shortlisted", app.isShortlisted());
                                         return result;
                                 })
                                 .collect(Collectors.toList());
                 return ResponseEntity.ok(shortlistResults);
+        }
+
+        // GET /api/jobs/shortlist-stats - Stats for "Choose Job" page
+        @GetMapping("/shortlist-stats")
+        public ResponseEntity<List<Map<String, Object>>> getShortlistStats() {
+                logger.info("Fetching shortlist statistics for all jobs");
+                List<Job> allJobs = jobService.getAllJobs();
+                List<Map<String, Object>> stats = allJobs.stream()
+                        .map(job -> {
+                                List<Application> apps = applicationService.getApplicationsForJob(job.getId());
+                                long count = apps.stream().filter(Application::isShortlisted).count();
+                                if (count > 0) {
+                                        Map<String, Object> stat = new HashMap<>();
+                                        stat.put("jobId", job.getId());
+                                        stat.put("title", job.getTitle());
+                                        stat.put("department", job.getDepartment());
+                                        stat.put("shortlistedCount", count);
+                                        return stat;
+                                }
+                                return null;
+                        })
+                        .filter(Objects::nonNull)
+                        .collect(Collectors.toList());
+                        
+                return ResponseEntity.ok(stats);
         }
 
         // DTO for creating jobs
@@ -226,7 +255,9 @@ public class JobController {
                 private List<String> skills;
                 private String jobType;
                 private Integer numberOfOpenings;
+
                 private LocalDateTime applicationDeadline;
+                private String requiredQualifications;
 
                 // Getters and Setters
                 public String getTitle() {
@@ -300,5 +331,41 @@ public class JobController {
                 public void setApplicationDeadline(LocalDateTime applicationDeadline) {
                         this.applicationDeadline = applicationDeadline;
                 }
+
+                public String getRequiredQualifications() {
+                        return requiredQualifications;
+                }
+
+                public void setRequiredQualifications(String requiredQualifications) {
+                        this.requiredQualifications = requiredQualifications;
+                }
+        }
+
+        @Autowired
+        private com.example.hrautoshortlist.service.EmailService emailService;
+
+        // POST /api/jobs/{id}/email-shortlist
+        @PostMapping("/{id}/email-shortlist")
+        public ResponseEntity<?> emailShortlist(@PathVariable Long id, @RequestBody Map<String, String> payload) {
+                logger.info("Sending emails to shortlisted candidates for job {}", id);
+                String subject = payload.get("subject");
+                String body = payload.get("body");
+
+                if (subject == null || body == null) {
+                        return ResponseEntity.badRequest().body("Subject and Body are required");
+                }
+
+                List<Application> apps = applicationService.getApplicationsForJob(id);
+                long sentCount = 0;
+
+                for (Application app : apps) {
+                        if (app.isShortlisted() && app.getCandidateUser() != null && app.getCandidateUser().getEmail() != null) {
+                                emailService.sendEmail(app.getCandidateUser().getEmail(), subject, body);
+                                sentCount++;
+                        }
+                }
+                
+                logger.info("Sent (or simulated) {} emails", sentCount);
+                return ResponseEntity.ok("Emails sent to " + sentCount + " candidates");
         }
 }

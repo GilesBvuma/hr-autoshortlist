@@ -19,7 +19,7 @@ import java.util.stream.Collectors;
 
 @RestController
 @RequestMapping("/api")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" })
+@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" }, methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
 public class ApplicationController {
 
     private static final Logger logger = LoggerFactory.getLogger(ApplicationController.class);
@@ -40,21 +40,27 @@ public class ApplicationController {
             @RequestParam Long candidateUserId,
             @RequestParam(required = false) String skills,
             @RequestParam(required = false) MultipartFile cv,
-            @RequestParam(required = false) MultipartFile letter) {
+            @RequestParam(required = false) MultipartFile letter,
+            @RequestParam(required = false) String candidateQualifications,
+            @RequestParam(required = false) MultipartFile certifications) {
         try {
             logger.info("=== APPLICATION SUBMISSION ===");
             logger.info("Job ID: {}", jobId);
             logger.info("Candidate User ID: {}", candidateUserId);
             logger.info("Skills: {}", skills);
+            logger.info("qualifications: {}", candidateQualifications);
             logger.info("CV: {}", cv != null ? cv.getOriginalFilename() : "None");
             logger.info("Letter: {}", letter != null ? letter.getOriginalFilename() : "None");
+            logger.info("Certifications: {}", certifications != null ? certifications.getOriginalFilename() : "None");
 
             Application application = applicationService.submitApplication(
                     jobId,
                     candidateUserId,
                     skills,
                     cv,
-                    letter);
+                    letter,
+                    candidateQualifications,
+                    certifications);
 
             logger.info("✓ Application saved with ID: {}", application.getId());
 
@@ -165,6 +171,19 @@ public class ApplicationController {
         } catch (Exception ex) {
             logger.error("Error in AI shortlist", ex);
             return ResponseEntity.status(500).build();
+        }
+    }
+
+    // PATCH /api/applications/{id}/toggle-shortlist
+    @PatchMapping("/applications/{id}/toggle-shortlist")
+    public ResponseEntity<?> toggleShortlist(@PathVariable Long id) {
+        try {
+            boolean isShortlisted = applicationService.toggleShortlist(id);
+            return ResponseEntity.ok(isShortlisted);
+        } catch (IllegalArgumentException ex) {
+            return ResponseEntity.status(404).body(ex.getMessage());
+        } catch (Exception ex) {
+            return ResponseEntity.status(500).body("Error toggling shortlist: " + ex.getMessage());
         }
     }
 }

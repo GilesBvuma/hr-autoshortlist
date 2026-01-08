@@ -1,15 +1,20 @@
 import { useState, useEffect } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import candidateApi from "../lib/axios";
-import CandidateNavbar from "../components/CandidateNavbar";
+import CandidateSidebar from "./CandidateSidebar";
+import { useAuthStore } from "../stores/useAuthStore";
 
 export default function ApplyJob() {
   const { id } = useParams(); // job id
   const navigate = useNavigate();
-  const [candidateUserId, setCandidateUserId] = useState("1"); // TODO: Get from auth context
+  const user = useAuthStore((s) => s.user);
+  const candidateUserId = user?.id;
+
   const [skills, setSkills] = useState("");
+  const [candidateQualifications, setCandidateQualifications] = useState("");
   const [cv, setCv] = useState(null);
   const [letter, setLetter] = useState(null);
+  const [certifications, setCertifications] = useState(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
   const [job, setJob] = useState(null);
@@ -21,7 +26,7 @@ export default function ApplyJob() {
       try {
         const res = await candidateApi.get(`/jobs/${id}`);
         setJob(res.data);
-        
+
         // Check if deadline has passed
         if (res.data.applicationDeadline) {
           const deadline = new Date(res.data.applicationDeadline);
@@ -43,7 +48,7 @@ export default function ApplyJob() {
 
   const submitHandler = async (e) => {
     e.preventDefault();
-    
+
     // Check deadline again before submitting
     if (job?.applicationDeadline) {
       const deadline = new Date(job.applicationDeadline);
@@ -53,7 +58,7 @@ export default function ApplyJob() {
         return;
       }
     }
-    
+
     setLoading(true);
     setError("");
 
@@ -61,8 +66,10 @@ export default function ApplyJob() {
     form.append("jobId", id);
     form.append("candidateUserId", candidateUserId);
     form.append("skills", skills);
+    form.append("candidateQualifications", candidateQualifications);
     if (cv) form.append("cv", cv);
     if (letter) form.append("letter", letter);
+    if (certifications) form.append("certifications", certifications);
 
     console.log("📤 Submitting application for job:", id);
 
@@ -71,7 +78,7 @@ export default function ApplyJob() {
         headers: { "Content-Type": "multipart/form-data" },
       });
       console.log("✅ Application submitted:", response.data);
-      
+
       alert("🎉 Application submitted successfully!");
       navigate("/jobs");
     } catch (err) {
@@ -88,11 +95,11 @@ export default function ApplyJob() {
     const date = new Date(dateString);
     const now = new Date();
     const daysLeft = Math.ceil((date - now) / (1000 * 60 * 60 * 24));
-    
+
     return {
-      formatted: date.toLocaleDateString("en-US", { 
-        month: "long", 
-        day: "numeric", 
+      formatted: date.toLocaleDateString("en-US", {
+        month: "long",
+        day: "numeric",
         year: "numeric",
         hour: "2-digit",
         minute: "2-digit"
@@ -105,9 +112,9 @@ export default function ApplyJob() {
 
   if (loadingJob) {
     return (
-      <div>
-        <CandidateNavbar />
-        <div className="max-w-3xl mx-auto p-6">
+      <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+        <CandidateSidebar />
+        <div className="flex-1 lg:ml-64 p-6 pt-24 lg:pt-12 max-w-3xl mx-auto">
           <div className="animate-pulse space-y-4">
             <div className="h-8 bg-slate-200 rounded w-1/2"></div>
             <div className="h-64 bg-slate-200 rounded"></div>
@@ -120,10 +127,10 @@ export default function ApplyJob() {
   const deadline = job?.applicationDeadline ? formatDeadline(job.applicationDeadline) : null;
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 via-blue-50 to-slate-100">
-      <CandidateNavbar />
-      
-      <div className="max-w-3xl mx-auto px-6 pt-24 pb-10">
+    <div className="min-h-screen bg-slate-50 flex flex-col lg:flex-row">
+      <CandidateSidebar />
+
+      <div className="flex-1 lg:ml-64 max-w-3xl mx-auto px-4 sm:px-6 pt-24 lg:pt-12 pb-10">
         {/* Back Button */}
         <button
           onClick={() => navigate(-1)}
@@ -155,7 +162,7 @@ export default function ApplyJob() {
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4l3 3m6-3a9 9 0 11-18 0 9 9 0 0118 0z" />
                 </svg>
                 <p className={`font-bold ${deadline.isUrgent ? "text-red-700" : "text-blue-700"}`}>
-                  {deadline.isUrgent 
+                  {deadline.isUrgent
                     ? `⚠️ Deadline: ${deadline.daysLeft} day${deadline.daysLeft !== 1 ? 's' : ''} remaining!`
                     : `Application Deadline: ${deadline.formatted}`
                   }
@@ -196,23 +203,6 @@ export default function ApplyJob() {
                   </p>
                 </div>
 
-                {/* Candidate ID (Temporary) */}
-                <div>
-                  <label className="block text-sm font-semibold text-slate-700 mb-2">
-                    Candidate User ID (Temporary) *
-                  </label>
-                  <input 
-                    type="number" 
-                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
-                    value={candidateUserId}
-                    onChange={(e) => setCandidateUserId(e.target.value)} 
-                    required
-                  />
-                  <p className="text-sm text-slate-500 mt-1">
-                    This will be replaced with automatic user detection after authentication is implemented
-                  </p>
-                </div>
-
                 {/* Skills Summary */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -231,13 +221,48 @@ export default function ApplyJob() {
                   </p>
                 </div>
 
+                {/* Candidate Qualifications */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Qualifications & Certifications
+                  </label>
+                  <textarea
+                    className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+                    value={candidateQualifications}
+                    onChange={(e) => setCandidateQualifications(e.target.value)}
+                    rows="3"
+                    placeholder="List your specific qualifications (e.g. MBA, IPMZ Diploma)..."
+                  />
+                </div>
+
+                {/* Certifications Upload */}
+                <div>
+                  <label className="block text-sm font-semibold text-slate-700 mb-2">
+                    Upload Merged Certifications (PDF)
+                  </label>
+                  <div className="relative">
+                    <input
+                      type="file"
+                      accept=".pdf"
+                      onChange={(e) => setCertifications(e.target.files[0])}
+                      className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+                    />
+                    {certifications && (
+                      <p className="text-sm text-green-600 mt-2">✓ {certifications.name}</p>
+                    )}
+                  </div>
+                  <p className="text-sm text-slate-500 mt-1">
+                    Please merge all certificates into a single PDF
+                  </p>
+                </div>
+
                 {/* CV Upload */}
                 <div>
                   <label className="block text-sm font-semibold text-slate-700 mb-2">
                     Upload CV (PDF) *
                   </label>
                   <div className="relative">
-                    <input 
+                    <input
                       type="file"
                       accept=".pdf"
                       onChange={(e) => setCv(e.target.files[0])}
@@ -258,7 +283,7 @@ export default function ApplyJob() {
                     Upload Cover Letter (Optional)
                   </label>
                   <div className="relative">
-                    <input 
+                    <input
                       type="file"
                       onChange={(e) => setLetter(e.target.files[0])}
                       className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200 file:mr-4 file:py-2 file:px-4 file:rounded-full file:border-0 file:text-sm file:font-semibold file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
@@ -274,7 +299,7 @@ export default function ApplyJob() {
 
                 {/* Submit Button */}
                 <div className="pt-4">
-                  <button 
+                  <button
                     className="w-full bg-gradient-to-r from-blue-600 to-cyan-600 text-white px-8 py-4 rounded-xl text-lg font-bold hover:from-blue-700 hover:to-cyan-700 disabled:from-gray-400 disabled:to-gray-500 transition-all duration-200 hover:scale-102 disabled:hover:scale-100 shadow-lg"
                     type="submit"
                     disabled={loading || !cv}

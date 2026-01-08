@@ -23,6 +23,9 @@ public class Job {
     @Column(length = 1000)
     private String shortDescription;
 
+    @Column(length = 2000)
+    private String requiredQualifications;
+
     @ElementCollection
     @CollectionTable(name = "job_skills", joinColumns = @JoinColumn(name = "job_id"))
     @Column(name = "skill")
@@ -167,5 +170,13 @@ public class Job {
 
     public void incrementViewCount() {
         this.viewCount++;
+    }
+
+    public String getRequiredQualifications() {
+        return requiredQualifications;
+    }
+
+    public void setRequiredQualifications(String requiredQualifications) {
+        this.requiredQualifications = requiredQualifications;
     }
 }

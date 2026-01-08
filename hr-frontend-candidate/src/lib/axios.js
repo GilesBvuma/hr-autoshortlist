@@ -8,13 +8,13 @@ const candidateApi = axios.create({
 });
 
 candidateApi.interceptors.request.use((config) => {
-  const token = localStorage.getItem("candidateToken");
+  const token = localStorage.getItem("candidateToken"); // Ensure this matches what we save
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   console.log("🔵 Candidate API Request:", config.method.toUpperCase(), config.baseURL + config.url);
-  
+
   return config;
 });
 

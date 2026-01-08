@@ -1,9 +1,9 @@
 package com.example.hrautoshortlist.dto;
 
 public class ShortlistResult {
-    private Long id;
-    private String name;
-    private String email;
+    private Long applicationId;
+    private String applicantName;
+    private String applicantEmail;
     private double computedScore;
     private boolean shortlisted;
     private String reason;
@@ -11,39 +11,38 @@ public class ShortlistResult {
     public ShortlistResult() {
     }
 
-    public ShortlistResult(Long id, String name, String email, double computedScore, boolean shortlisted,
-            String reason) {
-        this.id = id;
-        this.name = name;
-        this.email = email;
+    public ShortlistResult(Long applicationId, String applicantName, String applicantEmail, double computedScore, boolean shortlisted, String reason) {
+        this.applicationId = applicationId;
+        this.applicantName = applicantName;
+        this.applicantEmail = applicantEmail;
         this.computedScore = computedScore;
         this.shortlisted = shortlisted;
         this.reason = reason;
     }
 
     // Getters and Setters
-    public Long getId() {
-        return id;
+    public Long getApplicationId() {
+        return applicationId;
     }
 
-    public void setId(Long id) {
-        this.id = id;
+    public void setApplicationId(Long applicationId) {
+        this.applicationId = applicationId;
     }
 
-    public String getName() {
-        return name;
+    public String getApplicantName() {
+        return applicantName;
     }
 
-    public void setName(String name) {
-        this.name = name;
+    public void setApplicantName(String applicantName) {
+        this.applicantName = applicantName;
     }
 
-    public String getEmail() {
-        return email;
+    public String getApplicantEmail() {
+        return applicantEmail;
     }
 
-    public void setEmail(String email) {
-        this.email = email;
+    public void setApplicantEmail(String applicantEmail) {
+        this.applicantEmail = applicantEmail;
     }
 
     public double getComputedScore() {

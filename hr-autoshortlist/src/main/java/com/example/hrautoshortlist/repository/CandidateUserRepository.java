@@ -8,5 +8,9 @@ public interface CandidateUserRepository extends JpaRepository<CandidateUser, Lo
 
     CandidateUser findByEmail(String email);
 
+    CandidateUser findByEmailIgnoreCase(String email);
+
+    boolean existsByEmailIgnoreCase(String email);
+
     boolean existsByEmail(String email);
 }

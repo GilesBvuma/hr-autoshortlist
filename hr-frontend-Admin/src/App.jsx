@@ -7,6 +7,7 @@ import AdminDashboard from "./admin/AdminDashboard";
 import CreateJob from "./admin/CreateJob";
 import AdminJobsList from "./admin/AdminJobsList";
 import ChooseJob from "./admin/ChooseJob";
+import ShortlistReview from "./admin/ShortlistReview";
 import ApplicantsByJobAdmin from "./admin/ApplicantsByJobAdmin";
 import CandidatesPage from "./pages/CandidatesPage";
 import AllApplicants from "./pages/AllApplicants";
@@ -40,18 +41,19 @@ function App() {
           <Route path="jobs" element={<AdminJobsList />} />
           <Route path="jobs/create" element={<CreateJob />} />
           <Route path="jobs/choose" element={<ChooseJob />} />
+          <Route path="jobs/:jobId/shortlist-review" element={<ShortlistReview />} />
           <Route path="jobs/:jobId/applicants" element={<ApplicantsByJobAdmin />} />
           <Route path="applicants" element={<AllApplicants />} />
           <Route path="candidates" element={<CandidatesPage />} />
-          <Route path="reports" element = {<Reports/>}/>
+          <Route path="reports" element={<Reports />} />
         </Route>
 
         <Route
           path="/admin/reports"
           element={
-          <ProtectedRoute>
-            <Reports />
-          </ProtectedRoute>
+            <ProtectedRoute>
+              <Reports />
+            </ProtectedRoute>
           }
         />
 

@@ -18,4 +18,6 @@ public interface ApplicationRepository extends JpaRepository<Application, Long> 
 
     // FIXED: And here
     List<Application> findByCandidateUser_Id(Long candidateUserId);
+    // NEW: For cascading delete
+    void deleteByJob_Id(Long jobId);
 }

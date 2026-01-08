@@ -37,8 +37,10 @@ public class ApplicationService {
             Long jobId,
             Long candidateUserId,
             String skills,
-            MultipartFile cvFile,
-            MultipartFile letterFile) {
+            MultipartFile cv,
+            MultipartFile letter,
+            String candidateQualifications,
+            MultipartFile certifications) {
 
         logger.info("=== SUBMIT APPLICATION ===");
         logger.info("Job ID: {}", jobId);
@@ -68,34 +70,55 @@ public class ApplicationService {
             throw new IllegalStateException("You have already applied for this job");
         }
 
-        // Store files
-        String cvFilename = null;
-        String letterFilename = null;
+        Application application = new Application();
+        application.setJob(job);
+        application.setCandidateUser(candidate);
+        application.setSkills(skills);
+        application.setCandidateQualifications(candidateQualifications);
 
-        if (cvFile != null && !cvFile.isEmpty()) {
-            cvFilename = storageService.storeFile(cvFile);
+        // Variables to hold filenames for parsing later
+        String cvFilename = null;
+
+        // Upload files
+        if (cv != null && !cv.isEmpty()) {
+            cvFilename = storageService.storeFile(cv);
+            application.setCvFilename(cvFilename);
             logger.info("✓ CV stored: {}", cvFilename);
         }
 
-        if (letterFile != null && !letterFile.isEmpty()) {
-            letterFilename = storageService.storeFile(letterFile);
+        if (letter != null && !letter.isEmpty()) {
+            String letterFilename = storageService.storeFile(letter);
+            application.setLetterFilename(letterFilename);
             logger.info("✓ Letter stored: {}", letterFilename);
         }
-
-        // Create application
-        Application application = new Application(
-                candidate,
-                job,
-                skills,
-                cvFilename,
-                letterFilename);
+        
+        if (certifications != null && !certifications.isEmpty()) {
+            String certFilename = storageService.storeFile(certifications);
+            application.setCertificationsFilename(certFilename);
+            logger.info("✓ Certifications stored: {}", certFilename);
+        }
 
         logger.info("Saving application to database...");
         Application saved = applicationRepository.save(application);
         logger.info("✓ Application saved successfully with ID: {}", saved.getId());
 
+        // Parse CV automatically if uploaded
+        if (cvFilename != null) {
+            try {
+                logger.info("Parsing CV for application {}", saved.getId());
+                cvParsingService.parseAndSaveCV(saved);
+                logger.info("✓ CV parsed successfully");
+            } catch (Exception e) {
+                logger.error("Failed to parse CV for application {}, will retry during shortlisting", saved.getId(), e);
+                // Don't fail the application submission if CV parsing fails
+            }
+        }
+
         return saved;
     }
+
+    @Autowired
+    private CVParsingService cvParsingService;
 
     public List<Application> getApplicationsForJob(Long jobId) {
         logger.info("Fetching applications for job ID: {}", jobId);
@@ -119,5 +142,16 @@ public class ApplicationService {
         }
         logger.info("Deleting application ID: {}", id);
         applicationRepository.deleteById(id);
+    }
+
+    public boolean toggleShortlist(Long applicationId) {
+        Application app = applicationRepository.findById(applicationId)
+            .orElseThrow(() -> new IllegalArgumentException("Application not found"));
+        
+        boolean newState = !app.isShortlisted();
+        app.setShortlisted(newState);
+        applicationRepository.save(app);
+        logger.info("Application {} shortlisted status toggled to {}", applicationId, newState);
+        return newState;
     }
 }

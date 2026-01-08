@@ -11,12 +11,13 @@ export default function CreateJob() {
   const [shortDescription, setShortDescription] = useState("");
   const [description, setDescription] = useState("");
   const [skills, setSkills] = useState("");
-  
+  const [requiredQualifications, setRequiredQualifications] = useState("");
+
   // NEW FIELDS
   const [jobType, setJobType] = useState("PERMANENT");
   const [numberOfOpenings, setNumberOfOpenings] = useState("1");
   const [applicationDeadline, setApplicationDeadline] = useState("");
-  
+
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState("");
 
@@ -32,6 +33,7 @@ export default function CreateJob() {
       shortDescription,
       description,
       skills: skills.split(",").map((s) => s.trim()),
+      requiredQualifications,
       jobType,
       numberOfOpenings: Number(numberOfOpenings),
       applicationDeadline: applicationDeadline ? new Date(applicationDeadline).toISOString() : null,
@@ -59,7 +61,7 @@ export default function CreateJob() {
   };
 
   return (
-  
+
 
     <div className="p-8 max-w-4xl ">
       {/* Header */}
@@ -77,7 +79,7 @@ export default function CreateJob() {
 
       {/* Form */}
       <form onSubmit={submitHandler} className="bg-white rounded-xl shadow-sm border border-slate-200 p-8 space-y-6">
-        
+
         {/* Job Title */}
         <div>
           <label className="block text-sm font-semibold text-slate-700 mb-2">
@@ -219,6 +221,21 @@ export default function CreateJob() {
           </p>
         </div>
 
+        {/* Required Qualifications */}
+        <div>
+          <label className="block text-sm font-semibold text-slate-700 mb-2">
+            Required Qualifications / Certifications *
+          </label>
+          <textarea
+            className="w-full px-4 py-3 border border-slate-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all duration-200"
+            placeholder="e.g. Degree in HR, IPMZ Diploma, MBA..."
+            rows="4"
+            value={requiredQualifications}
+            onChange={(e) => setRequiredQualifications(e.target.value)}
+            required
+          />
+        </div>
+
         {/* Action Buttons */}
         <div className="flex gap-4 pt-4">
           <button
@@ -238,6 +255,6 @@ export default function CreateJob() {
         </div>
       </form>
     </div>
-    
+
   );
 }

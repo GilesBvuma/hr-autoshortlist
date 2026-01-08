@@ -42,7 +42,10 @@ public class JobService {
         return jobRepository.save(job);
     }
 
+    @Transactional
     public void deleteJob(Long id) {
+        logger.info("Deleting job {} and its applications", id);
+        applicationRepository.deleteByJob_Id(id); // Use the repository method
         jobRepository.deleteById(id);
     }
 

@@ -9,9 +9,12 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
+
 @RestController
-@RequestMapping("/auth")
-@CrossOrigin(origins = "http://localhost:5174") // Specific origin is better than "*"
+@RequestMapping("/api/auth")
+@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class CandidateAuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(CandidateAuthController.class);
@@ -53,6 +56,31 @@ public class CandidateAuthController {
         } catch (Exception ex) {
             logger.error("Unexpected error during registration", ex);
             return ResponseEntity.status(500).body("Registration failed: " + ex.getMessage());
+        }
+    }
+
+    // GET /api/auth/candidates/me - Get current candidate profile
+    @GetMapping("/candidates/me")
+    public ResponseEntity<?> getMe() {
+        try {
+            Authentication auth = SecurityContextHolder.getContext().getAuthentication();
+            if (auth == null || !auth.isAuthenticated()) {
+                return ResponseEntity.status(401).body("Not authenticated");
+            }
+
+            String email = auth.getName();
+            logger.info("Fetching profile for current candidate: {}", email);
+
+            CandidateUser candidate = candidateUserService.findByEmail(email);
+            if (candidate == null) {
+                return ResponseEntity.status(404).body("Candidate profile not found");
+            }
+
+            candidate.setPassword(null); // Safety
+            return ResponseEntity.ok(candidate);
+        } catch (Exception ex) {
+            logger.error("Error fetching current candidate profile", ex);
+            return ResponseEntity.status(500).body("Error fetching profile: " + ex.getMessage());
         }
     }
 
