@@ -3,7 +3,7 @@
 import axios from "axios";
 
 const adminApi = axios.create({
-  baseURL: "http://localhost:8080",  // Should NOT have /api here for auth routes
+  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080", // Changed to use environment variable
 });
 
 adminApi.interceptors.request.use((config) => {
@@ -11,10 +11,10 @@ adminApi.interceptors.request.use((config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
-  
+
   // Add logging to see what's being called
   console.log("🔵 API Request:", config.method.toUpperCase(), config.url);
-  
+
   return config;
 });
 

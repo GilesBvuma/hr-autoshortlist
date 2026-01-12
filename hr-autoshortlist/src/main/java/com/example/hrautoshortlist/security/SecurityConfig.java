@@ -25,9 +25,9 @@ public class SecurityConfig {
     private final com.example.hrautoshortlist.repository.UserRepository userRepository;
     private final com.example.hrautoshortlist.repository.CandidateUserRepository candidateUserRepository;
 
-    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtUtil jwtUtil, 
-                         com.example.hrautoshortlist.repository.UserRepository userRepository,
-                         com.example.hrautoshortlist.repository.CandidateUserRepository candidateUserRepository) {
+    public SecurityConfig(CustomUserDetailsService userDetailsService, JwtUtil jwtUtil,
+            com.example.hrautoshortlist.repository.UserRepository userRepository,
+            com.example.hrautoshortlist.repository.CandidateUserRepository candidateUserRepository) {
         this.userDetailsService = userDetailsService;
         this.jwtUtil = jwtUtil;
         this.userRepository = userRepository;
@@ -37,7 +37,8 @@ public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         JwtFilter jwtFilter = new JwtFilter(jwtUtil, userDetailsService);
-        FirebaseTokenFilter firebaseTokenFilter = new FirebaseTokenFilter(userDetailsService, userRepository, candidateUserRepository); // ADDED: Firebase Filter
+        FirebaseTokenFilter firebaseTokenFilter = new FirebaseTokenFilter(userDetailsService, userRepository,
+                candidateUserRepository); // ADDED: Firebase Filter
 
         http
                 .cors(cors -> cors.configurationSource(corsConfigurationSource())) // ADDED: Enable CORS
@@ -68,7 +69,9 @@ public class SecurityConfig {
         CorsConfiguration configuration = new CorsConfiguration();
         configuration.setAllowedOrigins(Arrays.asList(
                 "http://localhost:5173",
-                "http://localhost:5174"));
+                "http://localhost:5174",
+                "https://*.vercel.app" // ALLOW ALL VERCEL DEPLOYMENTS
+        ));
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
         configuration.setAllowCredentials(true);
