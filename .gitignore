@@ -1,0 +1,28 @@
+# Spring Boot
+hr-autoshortlist/target/
+hr-autoshortlist/build.log
+hr-autoshortlist/build_error.txt
+hr-autoshortlist/.mvn/
+
+# Node / React
+**/node_modules/
+**/dist/
+**/.env
+**/.env.local
+**/.env.production
+
+# Secrets (IMPORTANT)
+**/serviceAccountKey.json
+**/*.pem
+**/*.key
+
+# IDEs
+.idea/
+.vscode/
+*.iml
+*.iws
+*.ipr
+
+# OS Files
+.DS_Store
+Thumbs.db

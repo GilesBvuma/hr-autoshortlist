@@ -15,6 +15,9 @@ export default function ApplicantsByJobAdmin() {
   // ✨ NEW: Toggle to show/hide all candidate scores
   const [showAllScores, setShowAllScores] = useState(false);
 
+  // ✨ NEW: Search term for filtering applicants
+  const [searchTerm, setSearchTerm] = useState("");
+
   useEffect(() => {
     const loadData = async () => {
       try {
@@ -82,12 +85,22 @@ export default function ApplicantsByJobAdmin() {
     };
   };
 
-  // ✨ NEW: Sort applications by score if shortlisting has been done
+  // ✨ NEW: Sort and then Filter applications by search term
   const sortedCandidates = shortlist.length > 0
     ? candidates
       .map(getApplicationWithScore)
       .sort((a, b) => (b.score || 0) - (a.score || 0))
     : candidates;
+
+  const filteredCandidates = sortedCandidates.filter(c => {
+    const search = searchTerm.toLowerCase();
+    return (
+      c.fullname?.toLowerCase().includes(search) ||
+      c.email?.toLowerCase().includes(search) ||
+      (c.phone && c.phone.includes(search)) ||
+      (c.skills && c.skills.toLowerCase().includes(search))
+    );
+  });
 
   return (
     <>
@@ -150,6 +163,34 @@ export default function ApplicantsByJobAdmin() {
                   <span className="text-gray-700 font-medium select-none">Show all scores</span>
                 </label>
               )}
+
+              {/* ✨ NEW: Search Bar */}
+              <div className="flex-1 min-w-[250px]">
+                <div className="relative group">
+                  <span className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none text-gray-400 group-focus-within:text-indigo-500 transition-colors">
+                    <svg className="h-5 w-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z" />
+                    </svg>
+                  </span>
+                  <input
+                    type="text"
+                    placeholder="Search by name, email, or skills..."
+                    value={searchTerm}
+                    onChange={(e) => setSearchTerm(e.target.value)}
+                    className="block w-full pl-10 pr-4 py-2 bg-slate-50 border border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-indigo-500 focus:bg-white transition-all shadow-sm"
+                  />
+                  {searchTerm && (
+                    <button
+                      onClick={() => setSearchTerm("")}
+                      className="absolute inset-y-0 right-0 pr-3 flex items-center text-gray-400 hover:text-gray-600"
+                    >
+                      <svg className="h-4 w-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M6 18L18 6M6 6l12 12" />
+                      </svg>
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
 
             {shortlist.length > 0 && (
@@ -166,8 +207,8 @@ export default function ApplicantsByJobAdmin() {
             </div>
           ) : (
             <ul className="space-y-6">
-              {/* ✨ CHANGED: map over sortedCandidates */}
-              {sortedCandidates.map((c) => {
+              {/* ✨ CHANGED: map over filteredCandidates */}
+              {filteredCandidates.map((c) => {
                 const cWithScore = getApplicationWithScore(c); // Ensure we have score info
                 const showScore = showAllScores && cWithScore.score !== null;
 
@@ -271,8 +312,8 @@ export default function ApplicantsByJobAdmin() {
                             }
                           }}
                           className={`px-4 py-2 rounded-xl transition-all duration-300 font-medium border ${cWithScore.isShortlisted
-                              ? "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200"
-                              : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
+                            ? "bg-amber-100 text-amber-700 border-amber-300 hover:bg-amber-200"
+                            : "bg-slate-100 text-slate-600 border-slate-200 hover:bg-slate-200"
                             }`}
                         >
                           {cWithScore.isShortlisted ? "★ Unshortlist" : "☆ Add to Shortlist"}
