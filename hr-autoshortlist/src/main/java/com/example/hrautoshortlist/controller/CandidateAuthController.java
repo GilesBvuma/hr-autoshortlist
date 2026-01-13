@@ -14,7 +14,6 @@ import org.springframework.security.core.context.SecurityContextHolder;
 
 @RestController
 @RequestMapping("/api/auth")
-@CrossOrigin(origins = {"http://localhost:5173", "http://localhost:5174"})
 public class CandidateAuthController {
 
     private static final Logger logger = LoggerFactory.getLogger(CandidateAuthController.class);

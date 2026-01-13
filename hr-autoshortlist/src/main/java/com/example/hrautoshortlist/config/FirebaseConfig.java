@@ -15,11 +15,24 @@ public class FirebaseConfig {
 
     @Bean
     public FirebaseApp firebaseApp() throws IOException {
-        // Only initialize if not already initialized
         if (FirebaseApp.getApps().isEmpty()) {
-            ClassPathResource resource = new ClassPathResource("serviceAccountKey.json");
-            
-            try (InputStream serviceAccount = resource.getInputStream()) {
+            String firebaseConfig = System.getenv("FIREBASE_SERVICE_ACCOUNT");
+            InputStream serviceAccount;
+
+            if (firebaseConfig != null && !firebaseConfig.isEmpty()) {
+                // Initialize from environment variable (useful for Render/Heroku)
+                serviceAccount = new java.io.ByteArrayInputStream(
+                        firebaseConfig.getBytes(java.nio.charset.StandardCharsets.UTF_8));
+            } else {
+                // Fallback to classpath resource (useful for local development)
+                ClassPathResource resource = new ClassPathResource("serviceAccountKey.json");
+                if (!resource.exists()) {
+                    throw new IOException("Firebase service account key not found in environment or classpath.");
+                }
+                serviceAccount = resource.getInputStream();
+            }
+
+            try (serviceAccount) {
                 FirebaseOptions options = FirebaseOptions.builder()
                         .setCredentials(GoogleCredentials.fromStream(serviceAccount))
                         .build();

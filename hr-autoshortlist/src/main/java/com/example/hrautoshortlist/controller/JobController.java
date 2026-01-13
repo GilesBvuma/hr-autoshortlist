@@ -22,7 +22,6 @@ import java.util.Objects;
 
 @RestController
 @RequestMapping("/api/jobs")
-@CrossOrigin(origins = { "http://localhost:5173", "http://localhost:5174" }, methods = {RequestMethod.GET, RequestMethod.POST, RequestMethod.PUT, RequestMethod.DELETE, RequestMethod.PATCH, RequestMethod.OPTIONS})
 public class JobController {
 
         private static final Logger logger = LoggerFactory.getLogger(JobController.class);
@@ -226,22 +225,22 @@ public class JobController {
                 logger.info("Fetching shortlist statistics for all jobs");
                 List<Job> allJobs = jobService.getAllJobs();
                 List<Map<String, Object>> stats = allJobs.stream()
-                        .map(job -> {
-                                List<Application> apps = applicationService.getApplicationsForJob(job.getId());
-                                long count = apps.stream().filter(Application::isShortlisted).count();
-                                if (count > 0) {
-                                        Map<String, Object> stat = new HashMap<>();
-                                        stat.put("jobId", job.getId());
-                                        stat.put("title", job.getTitle());
-                                        stat.put("department", job.getDepartment());
-                                        stat.put("shortlistedCount", count);
-                                        return stat;
-                                }
-                                return null;
-                        })
-                        .filter(Objects::nonNull)
-                        .collect(Collectors.toList());
-                        
+                                .map(job -> {
+                                        List<Application> apps = applicationService.getApplicationsForJob(job.getId());
+                                        long count = apps.stream().filter(Application::isShortlisted).count();
+                                        if (count > 0) {
+                                                Map<String, Object> stat = new HashMap<>();
+                                                stat.put("jobId", job.getId());
+                                                stat.put("title", job.getTitle());
+                                                stat.put("department", job.getDepartment());
+                                                stat.put("shortlistedCount", count);
+                                                return stat;
+                                        }
+                                        return null;
+                                })
+                                .filter(Objects::nonNull)
+                                .collect(Collectors.toList());
+
                 return ResponseEntity.ok(stats);
         }
 
@@ -359,12 +358,13 @@ public class JobController {
                 long sentCount = 0;
 
                 for (Application app : apps) {
-                        if (app.isShortlisted() && app.getCandidateUser() != null && app.getCandidateUser().getEmail() != null) {
+                        if (app.isShortlisted() && app.getCandidateUser() != null
+                                        && app.getCandidateUser().getEmail() != null) {
                                 emailService.sendEmail(app.getCandidateUser().getEmail(), subject, body);
                                 sentCount++;
                         }
                 }
-                
+
                 logger.info("Sent (or simulated) {} emails", sentCount);
                 return ResponseEntity.ok("Emails sent to " + sentCount + " candidates");
         }
