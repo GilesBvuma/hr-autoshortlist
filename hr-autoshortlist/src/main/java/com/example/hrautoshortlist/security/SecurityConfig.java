@@ -46,6 +46,8 @@ public class SecurityConfig {
                 .authorizeHttpRequests(auth -> auth
                         // PUBLIC ENDPOINTS
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll() // Explicitly allow preflight
+                        .requestMatchers("/api/auth/CandidateRegister").permitAll()
+                        .requestMatchers("/api/auth/CandidateLogin").permitAll()
                         .requestMatchers("/api/auth/**").permitAll() // Login/Register
                         .requestMatchers("/api/jobs/**").permitAll() // All job endpoints (public for now)
                         .requestMatchers("/api/applications/**").permitAll() // Applications

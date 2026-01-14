@@ -2,8 +2,13 @@
 // CHANGED: Fixed baseURL - was "/api/admin" but backend endpoints are at "/api"
 import axios from "axios";
 
+const getBaseUrl = () => {
+  const url = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
+  return url.endsWith("/api") ? url : `${url}/api`;
+};
+
 const adminApi = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:8080", // Changed to use environment variable
+  baseURL: getBaseUrl(),
 });
 
 adminApi.interceptors.request.use((config) => {

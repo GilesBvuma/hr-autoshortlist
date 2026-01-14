@@ -89,6 +89,32 @@ public class UserService {
         return matches;
     }
 
+    public boolean validateLoginByEmail(String email, String rawPassword) {
+        logger.info("=== VALIDATE LOGIN BY EMAIL ===");
+        logger.info("Looking for email: {}", email);
+
+        User user = userRepository.findByEmail(email);
+
+        if (user == null) {
+            logger.warn("✗ User not found with email: {}", email);
+            return false;
+        }
+
+        logger.info("✓ User found: {}", user.getUsername());
+        logger.info("User email: {}", user.getEmail());
+
+        boolean matches = encoder.matches(rawPassword, user.getPassword());
+        logger.info("Password match result: {}", matches);
+
+        if (!matches) {
+            logger.warn("✗ Password does not match for email: {}", email);
+        } else {
+            logger.info("✓ Password matches for email: {}", email);
+        }
+
+        return matches;
+    }
+
     public User findByUsername(String username) {
         return userRepository.findByUsername(username);
     }

@@ -39,8 +39,34 @@ export default function AdminLogin() {
       console.log("Login successful, token retrieved");
       navigate("/admin/dashboard", { replace: true });
     } catch (err) {
-      console.error("Login failed:", err);
-      setError("Invalid username or password (Firebase)");
+      console.error("Firebase Login failed:", err);
+
+      // FALLBACK: Backend Login (for local DB users)
+      console.log("🔵 Attempting backend fallback login (Spring Security)...");
+      try {
+        const res = await adminApi.post('/auth/login', {
+          usernameOrEmail: username,
+          password: password
+        });
+
+        const { token } = res.data;
+        console.log("✅ Backend login successful");
+
+        localStorage.setItem("adminToken", token);
+
+        login({
+          user: { username: username, email: username }, // Backend might not return full profile in login, just token
+          token: token,
+          type: 'admin'
+        });
+
+        navigate("/admin/dashboard", { replace: true });
+        return; // Success!
+
+      } catch (backendErr) {
+        console.error("❌ Backend login failed:", backendErr);
+        setError("Invalid username or password");
+      }
     } finally {
       setLoading(false);
     }

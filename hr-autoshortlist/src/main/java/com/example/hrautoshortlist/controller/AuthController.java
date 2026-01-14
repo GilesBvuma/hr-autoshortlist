@@ -65,25 +65,48 @@ public class AuthController {
     public ResponseEntity<?> login(@RequestBody LoginRequest body) {
         try {
             logger.info("=== LOGIN REQUEST ===");
-            logger.info("Username: {}", body.username);
-            logger.info("Password provided: {}", body.password != null && !body.password.isEmpty());
+            logger.info("Username or Email: {}", body.usernameOrEmail);
 
-            if (body.username == null || body.username.trim().isEmpty()) {
-                return ResponseEntity.badRequest().body("Username is required");
+            if (body.usernameOrEmail == null || body.usernameOrEmail.trim().isEmpty()) {
+                return ResponseEntity.badRequest().body("Username or email is required");
             }
             if (body.password == null || body.password.trim().isEmpty()) {
                 return ResponseEntity.badRequest().body("Password is required");
             }
 
-            boolean ok = userService.validateLogin(body.username, body.password);
+            // Determine if input is valid email format
+            String identifier = body.usernameOrEmail.trim();
+            boolean isEmail = identifier.contains("@");
+
+            boolean ok;
+            String tokenIdentifier;
+
+            if (isEmail) {
+                // Login with email
+                ok = userService.validateLoginByEmail(identifier, body.password);
+                // For token generation, we'll try to find the username associated with this
+                // email
+                // or just use the email if that's how your JwtUtil works.
+                // Assuming JwtUtil expects username usually, let's fetch the user.
+                if (ok) {
+                    User user = userService.findByEmail(identifier);
+                    tokenIdentifier = user.getUsername();
+                } else {
+                    tokenIdentifier = identifier;
+                }
+            } else {
+                // Login with username
+                ok = userService.validateLogin(identifier, body.password);
+                tokenIdentifier = identifier;
+            }
 
             if (!ok) {
-                logger.warn("✗ Invalid credentials for username: {}", body.username);
+                logger.warn("✗ Invalid credentials for: {}", identifier);
                 return ResponseEntity.status(401).body("Invalid username or password");
             }
 
-            String token = jwtUtil.generateToken(body.username);
-            logger.info("✓ Login successful for user: {}", body.username);
+            String token = jwtUtil.generateToken(tokenIdentifier);
+            logger.info("✓ Login successful for: {}", tokenIdentifier);
             return ResponseEntity.ok(new JwtResponse(token));
 
         } catch (Exception ex) {
@@ -100,7 +123,7 @@ public class AuthController {
     }
 
     public static class LoginRequest {
-        public String username;
+        public String usernameOrEmail;
         public String password;
     }
 
