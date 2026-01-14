@@ -72,10 +72,12 @@ public class SecurityConfig {
         if (origins != null && !origins.isEmpty()) {
             configuration.setAllowedOrigins(Arrays.asList(origins.split(",")));
         } else {
+            // Default origins for local development
             configuration.setAllowedOrigins(Arrays.asList(
                     "http://localhost:5173",
                     "http://localhost:5174",
-                    "https://*.vercel.app"));
+                    "https://hr-autoshortlist-admin.vercel.app",
+                    "https://hr-autoshortlist-candidate.vercel.app"));
         }
         configuration.setAllowedMethods(Arrays.asList("GET", "POST", "PUT", "DELETE", "PATCH", "OPTIONS"));
         configuration.setAllowedHeaders(Arrays.asList("*"));
