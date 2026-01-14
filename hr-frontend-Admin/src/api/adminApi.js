@@ -3,8 +3,19 @@
 import axios from "axios";
 
 const getBaseUrl = () => {
-  const url = import.meta.env.VITE_API_URL || "http://localhost:8080/api";
-  return url.endsWith("/api") ? url : `${url}/api`;
+  let url = import.meta.env.VITE_API_URL || "http://localhost:8080";
+
+  // First remove any trailing slashes
+  while (url.endsWith("/")) {
+    url = url.slice(0, -1);
+  }
+
+  // Then remove /api if present at the end
+  if (url.endsWith("/api")) {
+    url = url.slice(0, -4);
+  }
+
+  return url;
 };
 
 const adminApi = axios.create({
