@@ -1,0 +1,54 @@
+Complete Request Flow Example
+When Frontend calls GET /api/candidates:
+
+React Frontend → HTTP GET request to /api/candidates
+
+CandidateController.getAllCandidates() → Receives request
+
+CandidateService.getAllCandidates() → Called by controller
+
+CandidateRepository.findAll() → Called by service (auto-implemented by Spring Data JPA)
+Database → SQL SELECT query executed
+
+Database → Returns data to Repository
+
+Repository → Returns List<Candidate> to Service
+
+Service → Returns List<Candidate> to Controller
+
+Controller → Returns JSON response to Frontend
+
+React → Displays the candidate list
+
+*🔗 How Everything Works Together (Flow Summary)
+USER REGISTERS
+
+AuthController → AuthService → UserRepository → DB
+
+Password hashed using BCrypt
+
+User saved
+
+*USER LOGS IN
+
+AuthController receives username/password
+
+AuthService checks password
+
+JwtUtil generates JWT
+
+Controller returns token to client
+
+*USER CALLS A PROTECTED ENDPOINT
+
+React sends request: Authorization: Bearer <token>
+
+JwtFilter intercepts request
+
+JwtUtil validates token
+
+CustomUserDetailsService loads user from DB
+
+Spring Security authenticates request
+
+Controller processes request
