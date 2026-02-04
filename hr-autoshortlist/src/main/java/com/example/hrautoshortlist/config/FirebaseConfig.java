@@ -43,3 +43,4 @@ public class FirebaseConfig {
         return FirebaseApp.getInstance();
     }
 }
+// this is just a comment for me to check if i can now use git .
