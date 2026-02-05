@@ -1,8 +1,9 @@
 import { useEffect, useState } from "react";
 import adminApi from "../api/adminApi";
-import { Link } from "react-router-dom";
+import { Link, useNavigate } from "react-router-dom";
 
 export default function AdminDashboard() {
+  const navigate = useNavigate();
   const [stats, setStats] = useState({
     totalJobs: 0,
     activeJobs: 0,
@@ -13,66 +14,82 @@ export default function AdminDashboard() {
   const [totalApplicants, setTotalApplicants] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState("");
+  const [authError, setAuthError] = useState(false);
 
- useEffect(() => {
-  const fetchStats = async () => {
-    try {
-      setLoading(true);
-      console.log("📥 Fetching dashboard statistics...");
-      
-      // Fetch all jobs
-      const jobsRes = await adminApi.get("/api/jobs");
-      console.log("✅ Jobs fetched:", jobsRes.data);
-      
-      const jobs = jobsRes.data;
-      
-      // Calculate job statistics
-      const totalJobs = jobs.length;
-      const activeJobs = jobs.filter(job => job.active === true).length;
-      const inactiveJobs = jobs.filter(job => job.active === false).length;
-      const totalViews = jobs.reduce((sum, job) => sum + (job.views || 0), 0);
-      
-      // Calculate job type breakdown
-      const jobTypeBreakdown = jobs.reduce((acc, job) => {
-        const type = job.jobType || "PERMANENT";
-        acc[type] = (acc[type] || 0) + 1;
-        return acc;
-      }, {});
+  useEffect(() => {
+    const fetchStats = async () => {
+      try {
+        setLoading(true);
+        setAuthError(false);
+        console.log("📥 Fetching dashboard statistics...");
 
-      console.log("📊 Calculated stats:", {
-        totalJobs,
-        activeJobs,
-        inactiveJobs,
-        totalViews,
-        jobTypeBreakdown
-      });
+        // Fetch all jobs
+        const jobsRes = await adminApi.get("/api/jobs");
+        console.log("✅ Jobs fetched:", jobsRes.data);
 
-      setStats({
-        totalJobs,
-        activeJobs,
-        inactiveJobs,
-        totalViews,
-        jobTypeBreakdown,
-      });
+        const jobs = jobsRes.data;
 
-      // Fetch applicant count
-      const applicantsRes = await adminApi.get("/api/applications/all");
-      console.log("✅ Applicants:", applicantsRes.data.length);
-      setTotalApplicants(applicantsRes.data.length);
-      
-      setError("");
-    } catch (err) {
-      console.error("❌ Failed to fetch statistics:", err);
-      console.error("Error details:", err.response?.data);
-      setError("Failed to load statistics. Please check your connection.");
-    } finally {
-      setLoading(false);
-    }
-  };
+        // Calculate job statistics
+        const totalJobs = jobs.length;
+        const activeJobs = jobs.filter(job => job.active === true).length;
+        const inactiveJobs = jobs.filter(job => job.active === false).length;
+        const totalViews = jobs.reduce((sum, job) => sum + (job.views || 0), 0);
 
-  fetchStats();
+        // Calculate job type breakdown
+        const jobTypeBreakdown = jobs.reduce((acc, job) => {
+          const type = job.jobType || "PERMANENT";
+          acc[type] = (acc[type] || 0) + 1;
+          return acc;
+        }, {});
 
-  }, []);
+        console.log("📊 Calculated stats:", {
+          totalJobs,
+          activeJobs,
+          inactiveJobs,
+          totalViews,
+          jobTypeBreakdown
+        });
+
+        setStats({
+          totalJobs,
+          activeJobs,
+          inactiveJobs,
+          totalViews,
+          jobTypeBreakdown,
+        });
+
+        // Fetch applicant count
+        const applicantsRes = await adminApi.get("/api/applications/all");
+        console.log("✅ Applicants:", applicantsRes.data.length);
+        setTotalApplicants(applicantsRes.data.length);
+
+        setError("");
+      } catch (err) {
+        console.error("❌ Failed to fetch statistics:", err);
+        console.error("Error details:", err.response?.data);
+
+        // Handle 401/403 authentication errors
+        if (err.response?.status === 401 || err.response?.status === 403) {
+          console.warn("⚠️ Authentication required. Redirecting to login...");
+          setAuthError(true);
+          setError("Please log in to view dashboard statistics.");
+          // Clear any invalid token
+          localStorage.removeItem("adminToken");
+          // Redirect to login after a short delay
+          setTimeout(() => {
+            navigate("/login", { state: { message: "Please log in to access the admin dashboard." } });
+          }, 2000);
+        } else {
+          setError("Failed to load statistics. Please check your connection.");
+        }
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    fetchStats();
+
+  }, [navigate]);
 
   const StatCard = ({ title, value, icon, color, link }) => (
     <Link
@@ -109,8 +126,32 @@ export default function AdminDashboard() {
 
       {/* Error Message */}
       {error && (
-        <div className="bg-red-50 border border-red-200 text-red-700 px-4 py-3 rounded-lg mb-6">
-          {error}
+        <div className={`px-4 py-4 rounded-lg mb-6 ${authError ? 'bg-amber-50 border border-amber-300' : 'bg-red-50 border border-red-200'}`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center">
+              {authError ? (
+                <svg className="w-5 h-5 text-amber-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                </svg>
+              ) : (
+                <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                </svg>
+              )}
+              <span className={authError ? 'text-amber-700' : 'text-red-700'}>{error}</span>
+            </div>
+            {authError && (
+              <button
+                onClick={() => navigate("/login")}
+                className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+              >
+                Go to Login
+              </button>
+            )}
+          </div>
+          {authError && (
+            <p className="text-amber-600 text-sm mt-2">Redirecting to login page in 2 seconds...</p>
+          )}
         </div>
       )}
 

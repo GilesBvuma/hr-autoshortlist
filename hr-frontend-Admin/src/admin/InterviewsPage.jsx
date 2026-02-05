@@ -1,13 +1,17 @@
 import { useState, useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 import adminApi from "../api/adminApi";
 
 export default function InterviewsPage() {
+    const navigate = useNavigate();
     const [candidates, setCandidates] = useState([]);
     const [selectedIds, setSelectedIds] = useState([]);
     const [loading, setLoading] = useState(true);
     const [showModal, setShowModal] = useState(false);
     const [sending, setSending] = useState(false);
     const [summary, setSummary] = useState(null);
+    const [error, setError] = useState("");
+    const [authError, setAuthError] = useState(false);
 
     // Form State
     const [form, setForm] = useState({
@@ -23,6 +27,8 @@ export default function InterviewsPage() {
     useEffect(() => {
         const fetchData = async () => {
             try {
+                setAuthError(false);
+                setError("");
                 const jobsRes = await adminApi.get("/api/jobs");
                 setJobs(jobsRes.data);
 
@@ -32,12 +38,25 @@ export default function InterviewsPage() {
                 setCandidates(shortlisted);
             } catch (err) {
                 console.error("Failed to fetch data", err);
+
+                // Handle 401/403 authentication errors
+                if (err.response?.status === 401 || err.response?.status === 403) {
+                    console.warn("⚠️ Authentication required. Redirecting to login...");
+                    setAuthError(true);
+                    setError("Please log in to view interview candidates.");
+                    localStorage.removeItem("adminToken");
+                    setTimeout(() => {
+                        navigate("/login", { state: { message: "Please log in to view interview candidates." } });
+                    }, 2000);
+                } else {
+                    setError("Failed to load data. Please try again.");
+                }
             } finally {
                 setLoading(false);
             }
         };
         fetchData();
-    }, []);
+    }, [navigate]);
 
     const handleSelectAll = (e) => {
         if (e.target.checked) {
@@ -97,6 +116,36 @@ export default function InterviewsPage() {
                         Send Interview Invitations ({selectedIds.length})
                     </button>
                 </div>
+
+                {error && (
+                    <div className={`mb-6 p-4 rounded-lg ${authError ? 'bg-amber-50 border border-amber-300' : 'bg-red-100'}`}>
+                        <div className="flex items-center justify-between">
+                            <div className="flex items-center">
+                                {authError ? (
+                                    <svg className="w-5 h-5 text-amber-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 9v2m0 4h.01m-6.938 4h13.856c1.54 0 2.502-1.667 1.732-3L13.732 4c-.77-1.333-2.694-1.333-3.464 0L3.34 16c-.77 1.333.192 3 1.732 3z" />
+                                    </svg>
+                                ) : (
+                                    <svg className="w-5 h-5 text-red-600 mr-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                        <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                    </svg>
+                                )}
+                                <span className={authError ? 'text-amber-700' : 'text-red-700'}>{error}</span>
+                            </div>
+                            {authError && (
+                                <button
+                                    onClick={() => navigate("/login")}
+                                    className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
+                                >
+                                    Go to Login
+                                </button>
+                            )}
+                        </div>
+                        {authError && (
+                            <p className="text-amber-600 text-sm mt-2">Redirecting to login page in 2 seconds...</p>
+                        )}
+                    </div>
+                )}
 
                 {summary && (
                     <div className="mb-6 p-4 bg-green-100 text-green-800 rounded-lg flex justify-between items-center">

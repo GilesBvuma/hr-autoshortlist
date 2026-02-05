@@ -26,6 +26,9 @@ adminApi.interceptors.request.use((config) => {
   const token = localStorage.getItem("adminToken");
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
+    console.log("🔐 Token attached:", token.substring(0, 20) + "...");
+  } else {
+    console.warn("⚠️ No adminToken found in localStorage!");
   }
 
   // Add logging to see what's being called
@@ -42,15 +45,22 @@ adminApi.interceptors.response.use(
   async (error) => {
     console.error("❌ API Error:", error.response?.status, error.response?.data);
 
-    // If 401 Unauthorized, it means token is invalid or expired
-    if (error.response && error.response.status === 401) {
-      console.warn("⚠️ Token expired or invalid. Logging out...");
-      localStorage.removeItem("adminToken");
+    const status = error.response?.status;
 
-      // Use window.location.href to force a clean reset/redirect if necessary
-      // or try to clear the zustand store if you can import it without circularity
-      // For now, removing the token is enough because the next refresh or state check will fail.
-      if (!window.location.pathname.includes("/login")) {
+    // If 401 Unauthorized or 403 Forbidden, it means token is invalid/expired or user lacks permission
+    if (status === 401 || status === 403) {
+      console.warn(`⚠️ Authentication error (${status}). Token may be invalid or user not authorized.`);
+
+      // For 401, the token is definitely invalid - clear it
+      if (status === 401) {
+        localStorage.removeItem("adminToken");
+        console.warn("🗑️ Cleared invalid adminToken from localStorage");
+      }
+
+      // For 403, it could be a token issue or truly unauthorized access
+      // Let individual components handle the redirect to avoid interrupting valid sessions
+      // Only auto-redirect for 401
+      if (status === 401 && !window.location.pathname.includes("/login")) {
         window.location.href = "/login";
       }
     }
