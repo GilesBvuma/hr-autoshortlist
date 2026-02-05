@@ -75,9 +75,9 @@ export default function AdminDashboard() {
           setError("Please log in to view dashboard statistics.");
           // Clear any invalid token
           localStorage.removeItem("adminToken");
-          // Redirect to login after a short delay
+          // Use hard redirect for reliable navigation (clears React state)
           setTimeout(() => {
-            navigate("/login", { state: { message: "Please log in to access the admin dashboard." } });
+            window.location.href = "/login";
           }, 2000);
         } else {
           setError("Failed to load statistics. Please check your connection.");
@@ -142,7 +142,7 @@ export default function AdminDashboard() {
             </div>
             {authError && (
               <button
-                onClick={() => navigate("/login")}
+                onClick={() => { localStorage.removeItem("adminToken"); window.location.href = "/login"; }}
                 className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
               >
                 Go to Login

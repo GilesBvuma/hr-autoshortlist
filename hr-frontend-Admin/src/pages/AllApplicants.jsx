@@ -36,7 +36,7 @@ export default function AllApplicants() {
           setError("Please log in to view applications.");
           localStorage.removeItem("adminToken");
           setTimeout(() => {
-            navigate("/login", { state: { message: "Please log in to view applications." } });
+            window.location.href = "/login";
           }, 2000);
         } else {
           setError("Failed to load applications");
@@ -198,7 +198,7 @@ export default function AllApplicants() {
                 </div>
                 {authError && (
                   <button
-                    onClick={() => navigate("/login")}
+                    onClick={() => { localStorage.removeItem("adminToken"); window.location.href = "/login"; }}
                     className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-xl text-sm font-medium transition-colors"
                   >
                     Go to Login

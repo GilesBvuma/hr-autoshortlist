@@ -46,7 +46,7 @@ export default function InterviewsPage() {
                     setError("Please log in to view interview candidates.");
                     localStorage.removeItem("adminToken");
                     setTimeout(() => {
-                        navigate("/login", { state: { message: "Please log in to view interview candidates." } });
+                        window.location.href = "/login";
                     }, 2000);
                 } else {
                     setError("Failed to load data. Please try again.");
@@ -134,7 +134,7 @@ export default function InterviewsPage() {
                             </div>
                             {authError && (
                                 <button
-                                    onClick={() => navigate("/login")}
+                                    onClick={() => { localStorage.removeItem("adminToken"); window.location.href = "/login"; }}
                                     className="bg-amber-600 hover:bg-amber-700 text-white px-4 py-2 rounded-lg text-sm font-medium transition-colors"
                                 >
                                     Go to Login
