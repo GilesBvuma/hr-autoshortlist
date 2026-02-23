@@ -5,8 +5,13 @@ import JobsList from "./components/JobLists";
 import JobDetails from "./components/JobDetails";
 import ApplyJob from "./components/ApplyJob";
 
+
 function App() {
   return (
+    <>
+    <div className="min-h-screen bg-gradient-to-r from-purple-600 to-pink-600 flex items-center justify-center text-white text-4xl font-bold">
+      TAILWIND IS ALIVE 🔥
+    </div>
     <BrowserRouter>
       <Routes>
         {/* Default redirect */}
@@ -17,11 +22,13 @@ function App() {
         <Route path="/jobs/:id" element={<JobDetails />} />
         <Route path="/apply/:id" element={<ApplyJob />} />
 
+
         {/* AUTH ROUTES */}
         <Route path="/auth/CandidateLogin" element={<CandidateLogin />} />
         <Route path="/auth/CandidateRegister" element={<CandidateRegister />} />
       </Routes>
     </BrowserRouter>
+    </>
   );
 }
 
