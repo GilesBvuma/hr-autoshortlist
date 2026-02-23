@@ -2,7 +2,6 @@ package com.example.hrautoshortlist.security;
 
 import com.google.firebase.auth.FirebaseAuth;
 import com.google.firebase.auth.FirebaseToken;
-import com.example.hrautoshortlist.entity.User;
 import com.example.hrautoshortlist.repository.UserRepository;
 import com.example.hrautoshortlist.repository.CandidateUserRepository;
 import org.slf4j.Logger;
@@ -17,7 +16,6 @@ import org.springframework.security.core.userdetails.UserDetails;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.ArrayList;
 import java.util.Collections;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
 
